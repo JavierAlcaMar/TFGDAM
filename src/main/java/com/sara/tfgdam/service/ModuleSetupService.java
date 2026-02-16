@@ -457,10 +457,15 @@ public class ModuleSetupService {
 
     private InstrumentRAResponse applyInstrumentRASet(Instrument instrument, Set<Long> targetRaIds) {
         Long instrumentId = instrument.getId();
+        Set<Long> currentRaIds = instrumentRARepository.findByInstrumentId(instrumentId).stream()
+                .map(link -> link.getLearningOutcome().getId())
+                .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+
+        List<LearningOutcomeRA> ras = List.of();
+        Long moduleId = instrument.getActivity().getModule().getId();
 
         if (!targetRaIds.isEmpty()) {
-            Long moduleId = instrument.getActivity().getModule().getId();
-            List<LearningOutcomeRA> ras = learningOutcomeRARepository.findAllById(targetRaIds);
+            ras = learningOutcomeRARepository.findAllById(targetRaIds);
 
             if (ras.size() != targetRaIds.size()) {
                 throw new BusinessValidationException("One or more RA ids do not exist");
@@ -473,21 +478,26 @@ public class ModuleSetupService {
             }
 
             configurationValidator.validateInstrumentRAsAllowedByUT(instrument.getActivity(), targetRaIds);
+        }
 
-            instrumentRARepository.deleteByInstrumentId(instrumentId);
-            for (Long raId : targetRaIds) {
-                LearningOutcomeRA ra = ras.stream()
-                        .filter(item -> item.getId().equals(raId))
-                        .findFirst()
-                        .orElseThrow(() -> new ResourceNotFoundException("RA not found: " + raId));
+        Set<Long> toRemove = new LinkedHashSet<>(currentRaIds);
+        toRemove.removeAll(targetRaIds);
+        for (Long raId : toRemove) {
+            instrumentRARepository.deleteByInstrumentIdAndLearningOutcomeId(instrumentId, raId);
+        }
 
-                instrumentRARepository.save(InstrumentRA.builder()
-                        .instrument(instrument)
-                        .learningOutcome(ra)
-                        .build());
-            }
-        } else {
-            instrumentRARepository.deleteByInstrumentId(instrumentId);
+        Set<Long> toAdd = new LinkedHashSet<>(targetRaIds);
+        toAdd.removeAll(currentRaIds);
+        for (Long raId : toAdd) {
+            LearningOutcomeRA ra = ras.stream()
+                    .filter(item -> item.getId().equals(raId))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("RA not found: " + raId));
+
+            instrumentRARepository.save(InstrumentRA.builder()
+                    .instrument(instrument)
+                    .learningOutcome(ra)
+                    .build());
         }
 
         return InstrumentRAResponse.builder()
@@ -541,7 +551,7 @@ public class ModuleSetupService {
     }
 
     private Instrument getInstrument(Long instrumentId) {
-        return instrumentRepository.findById(instrumentId)
+        return instrumentRepository.findDetailedById(instrumentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Instrument not found: " + instrumentId));
     }
 

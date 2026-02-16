@@ -11,41 +11,25 @@ import com.sara.tfgdam.repository.TeachingUnitUTRepository;
 import com.sara.tfgdam.repository.UTRALinkRepository;
 import com.sara.tfgdam.validation.ConfigurationValidator;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
 class CalculationServiceTest {
 
-    @Mock
-    private CourseModuleRepository courseModuleRepository;
-    @Mock
-    private LearningOutcomeRARepository learningOutcomeRARepository;
-    @Mock
-    private TeachingUnitUTRepository teachingUnitUTRepository;
-    @Mock
-    private UTRALinkRepository utraLinkRepository;
-    @Mock
-    private ActivityRepository activityRepository;
-    @Mock
-    private InstrumentRepository instrumentRepository;
-    @Mock
-    private InstrumentRARepository instrumentRARepository;
-    @Mock
-    private StudentRepository studentRepository;
-    @Mock
-    private GradeRepository gradeRepository;
-    @Mock
-    private ConfigurationValidator configurationValidator;
-
-    @InjectMocks
-    private CalculationService calculationService;
+    private final CalculationService calculationService = new CalculationService(
+            (CourseModuleRepository) null,
+            (LearningOutcomeRARepository) null,
+            (TeachingUnitUTRepository) null,
+            (UTRALinkRepository) null,
+            (ActivityRepository) null,
+            (InstrumentRepository) null,
+            (InstrumentRARepository) null,
+            (StudentRepository) null,
+            (GradeRepository) null,
+            (ConfigurationValidator) null
+    );
 
     @Test
     void bulletinGrade_whenNumericLowerThanOne_returnsOne() {
