@@ -48,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -147,6 +148,19 @@ public class ModuleSetupService {
         utraLinkRepository.deleteByLearningOutcomeId(ra.getId());
         instrumentRARepository.deleteByLearningOutcomeId(ra.getId());
         learningOutcomeRARepository.delete(ra);
+    }
+
+    @Transactional(readOnly = true)
+    public LearningOutcomeRA getRAById(Long raId) {
+        return getRA(raId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LearningOutcomeRA> getRAsByModuleId(Long moduleId) {
+        getModule(moduleId);
+        return learningOutcomeRARepository.findByModuleId(moduleId).stream()
+                .sorted(Comparator.comparing(LearningOutcomeRA::getId))
+                .toList();
     }
 
     @Transactional

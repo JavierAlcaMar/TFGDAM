@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +27,11 @@ public class RAController {
 
     private final ModuleSetupService moduleSetupService;
     private final DtoMapper mapper;
+
+    @GetMapping("/{raId}")
+    public RAResponse getRA(@PathVariable Long raId) {
+        return mapper.toRAResponse(moduleSetupService.getRAById(raId));
+    }
 
     @PutMapping("/{raId}")
     public RAResponse updateRA(@PathVariable Long raId, @Valid @RequestBody UpdateRARequest request) {

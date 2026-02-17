@@ -49,6 +49,13 @@ public class ModuleController {
         return mapper.toModuleResponse(moduleSetupService.createModule(request));
     }
 
+    @GetMapping("/{id}/ras")
+    public List<RAResponse> getRAsByModule(@PathVariable Long id) {
+        return moduleSetupService.getRAsByModuleId(id).stream()
+                .map(mapper::toRAResponse)
+                .toList();
+    }
+
     @PostMapping("/{id}/ras")
     @ResponseStatus(HttpStatus.CREATED)
     public RAResponse createRA(@PathVariable Long id, @Valid @RequestBody CreateRARequest request) {
