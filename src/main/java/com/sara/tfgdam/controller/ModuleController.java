@@ -6,6 +6,7 @@ import com.sara.tfgdam.dto.CreateUTRequest;
 import com.sara.tfgdam.dto.ImportRAsConfirmRequest;
 import com.sara.tfgdam.dto.ModuleEvaluationReportResponse;
 import com.sara.tfgdam.dto.ModuleFinalReportResponse;
+import com.sara.tfgdam.dto.ModulePreviewResponse;
 import com.sara.tfgdam.dto.ModuleResponse;
 import com.sara.tfgdam.dto.PatchUTRALinkRequest;
 import com.sara.tfgdam.dto.RAResponse;
@@ -16,6 +17,7 @@ import com.sara.tfgdam.dto.UpsertUTRALinkRequest;
 import com.sara.tfgdam.mapper.DtoMapper;
 import com.sara.tfgdam.service.CalculationService;
 import com.sara.tfgdam.service.ModuleSetupService;
+import com.sara.tfgdam.service.ModulePreviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,6 +42,7 @@ import java.util.List;
 public class ModuleController {
 
     private final ModuleSetupService moduleSetupService;
+    private final ModulePreviewService modulePreviewService;
     private final CalculationService calculationService;
     private final DtoMapper mapper;
 
@@ -47,6 +50,12 @@ public class ModuleController {
     @ResponseStatus(HttpStatus.CREATED)
     public ModuleResponse createModule(@Valid @RequestBody CreateModuleRequest request) {
         return mapper.toModuleResponse(moduleSetupService.createModule(request));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteModule(@PathVariable Long id) {
+        moduleSetupService.deleteModule(id);
     }
 
     @GetMapping("/{id}/ras")
@@ -111,5 +120,10 @@ public class ModuleController {
     @GetMapping("/{id}/reports/final")
     public ModuleFinalReportResponse moduleFinalReport(@PathVariable Long id) {
         return calculationService.getModuleFinalReport(id);
+    }
+
+    @GetMapping("/{id}/preview")
+    public ModulePreviewResponse modulePreview(@PathVariable Long id) {
+        return modulePreviewService.getPreview(id);
     }
 }

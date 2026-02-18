@@ -63,8 +63,8 @@ Si la base esta vacia, se insertan datos demo automaticamente con `CommandLineRu
 - `DELETE /instruments/{id}/ras/{raId}`
 - `POST /students`
 - `POST /imports/ra` (multipart: `file` + `moduleId`)
-- `POST /imports/excel-json` (JSON completo: modulo+RAs+UTs+instrumentos+alumnos+notas)
-- `POST /imports/excel-file` (multipart `.xlsx` plantilla oficial -> importacion completa)
+- `POST /imports/excel-json` (JSON completo: modulo+RAs+UTs+instrumentos+alumnos+notas, con `evaluationOverrides` opcional)
+- `POST /imports/excel-file` (multipart `.xlsx` plantilla oficial -> importacion completa; tambien lee `Evaluaciones`)
 - `GET /imports/ra/{jobId}`
 
 ### Notas
@@ -224,6 +224,15 @@ curl -X POST http://localhost:8080/imports/excel-json \
           {"instrumentKey":"I2","gradeValue":8.0}
         ]
       }
+    ],
+    "evaluationOverrides":[
+      {
+        "studentCode":"A001",
+        "evaluationPeriod":1,
+        "numericGrade":6.5578,
+        "suggestedBulletinGrade":7,
+        "allRAsPassed":true
+      }
     ]
   }'
 ```
@@ -235,6 +244,12 @@ curl -X POST http://localhost:8080/imports/excel-file \
   -H "Authorization: Bearer $TOKEN" \
   -F "file=@/ruta/source_template_rellenado.xlsx"
 ```
+
+Notas sobre importacion desde plantilla:
+
+- Se toman `Datos Iniciales` y `Actividades` para crear modulo, RAs, UTs, instrumentos, alumnos y notas.
+- Si existe la hoja `Evaluaciones`, tambien se importan los valores de evaluacion por alumno (`nota numerica`, `boletin sugerido`, `RAs superados`) como overrides por evaluacion.
+- En `GET /modules/{id}/reports/evaluation/{n}`, si hay override para alumno+evaluacion se muestra ese valor; si no, se usa el calculo dinamico.
 
 Flujo de autenticacion y autorizacion (SARA):
 
@@ -293,4 +308,5 @@ Nota: sustituye `3` por el `id` real del profesor devuelto al crearlo.
 - Para cada actividad (UT), suma de instrumentos = 100.
 - Un instrumento solo puede asociarse a RAs permitidos por su UT (reparto > 0).
 
-Todos los calculos (actividad, RA, evaluacion, final y boletin sugerido) se calculan dinamicamente en `CalculationService`; no se persisten notas calculadas.
+Los calculos de actividad/RA/final se calculan dinamicamente en `CalculationService`.
+Para reportes de evaluacion, el backend usa calculo dinamico salvo que exista un override importado desde `Evaluaciones` (en ese caso prevalece el valor importado).

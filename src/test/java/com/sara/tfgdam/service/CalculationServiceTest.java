@@ -7,6 +7,7 @@ import com.sara.tfgdam.repository.InstrumentRARepository;
 import com.sara.tfgdam.repository.InstrumentRepository;
 import com.sara.tfgdam.repository.LearningOutcomeRARepository;
 import com.sara.tfgdam.repository.StudentRepository;
+import com.sara.tfgdam.repository.StudentEvaluationOverrideRepository;
 import com.sara.tfgdam.repository.TeachingUnitUTRepository;
 import com.sara.tfgdam.repository.UTRALinkRepository;
 import com.sara.tfgdam.validation.ConfigurationValidator;
@@ -27,6 +28,7 @@ class CalculationServiceTest {
             (InstrumentRepository) null,
             (InstrumentRARepository) null,
             (StudentRepository) null,
+            (StudentEvaluationOverrideRepository) null,
             (GradeRepository) null,
             (ConfigurationValidator) null
     );

@@ -3,6 +3,7 @@ package com.sara.tfgdam.service;
 import com.sara.tfgdam.domain.entity.Instrument;
 import com.sara.tfgdam.domain.entity.LearningOutcomeRA;
 import com.sara.tfgdam.domain.entity.Student;
+import com.sara.tfgdam.domain.entity.StudentEvaluationOverride;
 import com.sara.tfgdam.domain.entity.TeachingUnitUT;
 import com.sara.tfgdam.dto.CreateInstrumentRequest;
 import com.sara.tfgdam.dto.CreateRARequest;
@@ -15,6 +16,7 @@ import com.sara.tfgdam.dto.GradeEntryRequest;
 import com.sara.tfgdam.dto.SetInstrumentRAsRequest;
 import com.sara.tfgdam.dto.UpsertUTRALinkRequest;
 import com.sara.tfgdam.exception.BusinessValidationException;
+import com.sara.tfgdam.repository.StudentEvaluationOverrideRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,7 @@ public class ExcelJsonImportService {
 
     private final ModuleSetupService moduleSetupService;
     private final GradeService gradeService;
+    private final StudentEvaluationOverrideRepository studentEvaluationOverrideRepository;
 
     @Transactional
     public ExcelImportResponse importExcelJson(ExcelImportRequest request) {
@@ -121,6 +124,7 @@ public class ExcelJsonImportService {
 
         List<ExcelImportRequest.StudentItem> students = request.getStudents() == null ? List.of() : request.getStudents();
         Map<String, Long> studentIdsByCode = new LinkedHashMap<>();
+        Map<String, Student> studentsByNormalizedCode = new LinkedHashMap<>();
         List<GradeEntryRequest> gradeEntries = new ArrayList<>();
 
         for (var studentItem : students) {
@@ -131,6 +135,7 @@ public class ExcelJsonImportService {
 
             Student student = moduleSetupService.createStudent(createStudentRequest);
             studentIdsByCode.put(studentItem.getStudentCode().trim(), student.getId());
+            studentsByNormalizedCode.put(normalizeKey(studentItem.getStudentCode()), student);
 
             List<ExcelImportRequest.GradeItem> grades = studentItem.getGrades() == null ? List.of() : studentItem.getGrades();
             for (var gradeItem : grades) {
@@ -152,6 +157,27 @@ public class ExcelJsonImportService {
             GradeBatchRequest batchRequest = new GradeBatchRequest();
             batchRequest.setGrades(gradeEntries);
             gradeCount = gradeService.upsertGrades(batchRequest).size();
+        }
+
+        List<ExcelImportRequest.EvaluationOverrideItem> evaluationOverrides =
+                request.getEvaluationOverrides() == null ? List.of() : request.getEvaluationOverrides();
+        if (!evaluationOverrides.isEmpty()) {
+            List<StudentEvaluationOverride> overrides = new ArrayList<>();
+            for (ExcelImportRequest.EvaluationOverrideItem item : evaluationOverrides) {
+                Student student = studentsByNormalizedCode.get(normalizeKey(item.getStudentCode()));
+                if (student == null) {
+                    throw new BusinessValidationException("evaluationOverride references unknown studentCode: " + item.getStudentCode());
+                }
+
+                overrides.add(StudentEvaluationOverride.builder()
+                        .student(student)
+                        .evaluationPeriod(item.getEvaluationPeriod())
+                        .numericGrade(item.getNumericGrade())
+                        .suggestedBulletinGrade(item.getSuggestedBulletinGrade())
+                        .allRAsPassed(item.getAllRAsPassed())
+                        .build());
+            }
+            studentEvaluationOverrideRepository.saveAll(overrides);
         }
 
         return ExcelImportResponse.builder()
@@ -178,6 +204,7 @@ public class ExcelJsonImportService {
         }
 
         Set<String> normalizedUtKeys = new LinkedHashSet<>();
+        Set<Integer> evaluationPeriods = new LinkedHashSet<>();
         Set<String> normalizedInstrumentKeys = new LinkedHashSet<>();
 
         for (var ut : request.getUts()) {
@@ -185,6 +212,7 @@ public class ExcelJsonImportService {
             if (!normalizedUtKeys.add(utKey)) {
                 throw new BusinessValidationException("Duplicated UT key in payload: " + ut.getKey().trim());
             }
+            evaluationPeriods.add(ut.getEvaluationPeriod());
 
             for (var distribution : ut.getRaDistributions()) {
                 String raCode = normalizeKey(distribution.getRaCode());
@@ -228,6 +256,32 @@ public class ExcelJsonImportService {
                             "Student grade references unknown instrumentKey: " + grade.getInstrumentKey().trim()
                     );
                 }
+            }
+        }
+
+        List<ExcelImportRequest.EvaluationOverrideItem> evaluationOverrides =
+                request.getEvaluationOverrides() == null ? List.of() : request.getEvaluationOverrides();
+        Set<String> overrideKeys = new LinkedHashSet<>();
+        for (ExcelImportRequest.EvaluationOverrideItem override : evaluationOverrides) {
+            String studentCode = normalizeKey(override.getStudentCode());
+            if (!normalizedStudentCodes.contains(studentCode)) {
+                throw new BusinessValidationException(
+                        "evaluationOverride references unknown studentCode: " + override.getStudentCode().trim()
+                );
+            }
+
+            if (!evaluationPeriods.contains(override.getEvaluationPeriod())) {
+                throw new BusinessValidationException(
+                        "evaluationOverride references unknown evaluationPeriod: " + override.getEvaluationPeriod()
+                );
+            }
+
+            String key = studentCode + "#" + override.getEvaluationPeriod();
+            if (!overrideKeys.add(key)) {
+                throw new BusinessValidationException(
+                        "Duplicated evaluationOverride for studentCode/evaluationPeriod: "
+                                + override.getStudentCode().trim() + "/" + override.getEvaluationPeriod()
+                );
             }
         }
     }

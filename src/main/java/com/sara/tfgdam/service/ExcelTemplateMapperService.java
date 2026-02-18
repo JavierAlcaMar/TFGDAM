@@ -34,6 +34,7 @@ public class ExcelTemplateMapperService {
 
     private static final String SHEET_DATOS_INICIALES = "Datos Iniciales";
     private static final String SHEET_ACTIVIDADES = "Actividades";
+    private static final String SHEET_EVALUACIONES = "Evaluaciones";
 
     private static final int RA_ROW_START = 8;   // row 9
     private static final int RA_ROW_END = 17;    // row 18
@@ -60,6 +61,15 @@ public class ExcelTemplateMapperService {
     private static final int ACT_ROW_STUDENT_START = 5; // row 6
     private static final int ACT_ROW_WEIGHTS = 3;       // row 4
 
+    private static final int EVAL_ROW_STUDENT_START = 4; // row 5
+    private static final int EVAL_COL_STUDENT_NAME = 1;  // B
+    private static final int EVAL_COL_NUMERIC_BASE = 17; // R
+    private static final int EVAL_COL_SUGGESTED_BASE = 19; // T
+    private static final int EVAL_COL_FAILED_BASE = 30; // AE
+    private static final int EVAL_BLOCK_WIDTH = 15; // R..AE, AG..AT, ...
+
+    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100.00");
+
     public ExcelImportRequest mapTemplate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessValidationException("file is required and cannot be empty");
@@ -73,6 +83,7 @@ public class ExcelTemplateMapperService {
         try (InputStream inputStream = file.getInputStream(); Workbook workbook = WorkbookFactory.create(inputStream)) {
             Sheet datos = workbook.getSheet(SHEET_DATOS_INICIALES);
             Sheet actividades = workbook.getSheet(SHEET_ACTIVIDADES);
+            Sheet evaluaciones = workbook.getSheet(SHEET_EVALUACIONES);
 
             if (datos == null || actividades == null) {
                 throw new BusinessValidationException("Invalid template. Sheets 'Datos Iniciales' and 'Actividades' are required");
@@ -103,6 +114,7 @@ public class ExcelTemplateMapperService {
 
             List<ExcelImportRequest.StudentItem> students = parseStudents(datos, actividades, activityRows, evaluator, formatter);
             request.setStudents(students);
+            request.setEvaluationOverrides(parseEvaluationOverrides(evaluaciones, students, uts, evaluator, formatter));
 
             return request;
         } catch (IOException ex) {
@@ -153,6 +165,9 @@ public class ExcelTemplateMapperService {
             }
             if (weight == null) {
                 throw new BusinessValidationException("Missing RA weight at row " + (row + 1));
+            }
+            if (weight.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
             }
 
             ImportRAItemDto dto = new ImportRAItemDto();
@@ -206,8 +221,12 @@ public class ExcelTemplateMapperService {
                 }
             }
 
+            // Ignore template placeholder rows (name only, without UT and without RA weights).
             boolean hasData = !isBlank(activityName) || !isBlank(utKey) || totalWeight.compareTo(BigDecimal.ZERO) > 0;
             if (!hasData) {
+                continue;
+            }
+            if (isBlank(utKey) && totalWeight.compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }
 
@@ -261,16 +280,51 @@ public class ExcelTemplateMapperService {
     }
 
     private Map<String, List<ExcelImportRequest.InstrumentItem>> buildInstrumentsByUT(List<ActivityRow> rows) {
-        Map<String, List<ExcelImportRequest.InstrumentItem>> byUt = new LinkedHashMap<>();
-
+        Map<String, List<ActivityRow>> rowsByUt = new LinkedHashMap<>();
         for (ActivityRow row : rows) {
-            ExcelImportRequest.InstrumentItem instrumentItem = new ExcelImportRequest.InstrumentItem();
-            instrumentItem.setKey(row.instrumentKey);
-            instrumentItem.setName(row.activityName);
-            instrumentItem.setWeightPercent(row.weightPercent);
-            instrumentItem.setRaCodes(row.raCodes);
+            rowsByUt.computeIfAbsent(normalize(row.utKey), ignored -> new ArrayList<>()).add(row);
+        }
 
-            byUt.computeIfAbsent(normalize(row.utKey), ignored -> new ArrayList<>()).add(instrumentItem);
+        Map<String, List<ExcelImportRequest.InstrumentItem>> byUt = new LinkedHashMap<>();
+        for (var entry : rowsByUt.entrySet()) {
+            List<ActivityRow> utRows = entry.getValue();
+            BigDecimal totalWeight = utRows.stream()
+                    .map(item -> item.weightPercent)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (totalWeight.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+
+            BigDecimal assigned = BigDecimal.ZERO;
+            List<ExcelImportRequest.InstrumentItem> instruments = new ArrayList<>();
+
+            for (int i = 0; i < utRows.size(); i++) {
+                ActivityRow row = utRows.get(i);
+
+                BigDecimal normalizedWeight;
+                if (i == utRows.size() - 1) {
+                    normalizedWeight = ONE_HUNDRED.subtract(assigned);
+                } else {
+                    normalizedWeight = row.weightPercent
+                            .multiply(ONE_HUNDRED)
+                            .divide(totalWeight, 2, RoundingMode.HALF_UP);
+                    BigDecimal remaining = ONE_HUNDRED.subtract(assigned);
+                    if (normalizedWeight.compareTo(remaining) > 0) {
+                        normalizedWeight = remaining;
+                    }
+                }
+
+                ExcelImportRequest.InstrumentItem instrumentItem = new ExcelImportRequest.InstrumentItem();
+                instrumentItem.setKey(row.instrumentKey);
+                instrumentItem.setName(row.activityName);
+                instrumentItem.setWeightPercent(scale2(normalizedWeight));
+                instrumentItem.setRaCodes(row.raCodes);
+                instruments.add(instrumentItem);
+
+                assigned = assigned.add(instrumentItem.getWeightPercent());
+            }
+
+            byUt.put(entry.getKey(), instruments);
         }
 
         return byUt;
@@ -305,20 +359,23 @@ public class ExcelTemplateMapperService {
                 distributions.add(item);
             }
 
-            boolean hasData = !isBlank(utKey) || !distributions.isEmpty();
-            if (!hasData) {
+            if (isBlank(utKey) && distributions.isEmpty()) {
                 continue;
             }
-
             if (isBlank(utKey)) {
                 throw new BusinessValidationException("UT row " + (row + 1) + " has RA distribution but empty UT key");
-            }
-            if (distributions.isEmpty()) {
-                throw new BusinessValidationException("UT " + utKey + " has no RA distribution > 0");
             }
 
             List<ExcelImportRequest.InstrumentItem> instruments =
                     instrumentsByUtKey.getOrDefault(normalize(utKey), List.of());
+
+            if (distributions.isEmpty()) {
+                if (instruments.isEmpty()) {
+                    // Ignore placeholder UT rows with key but without distributions/activities.
+                    continue;
+                }
+                throw new BusinessValidationException("UT " + utKey + " has no RA distribution > 0");
+            }
             if (instruments.isEmpty()) {
                 throw new BusinessValidationException("UT " + utKey + " has no activities/instruments in table 3");
             }
@@ -385,8 +442,8 @@ public class ExcelTemplateMapperService {
             }
 
             String key = instrumentKeyByActivityName.get(normalize(blockName));
-            if (key == null) {
-                key = blockName.trim();
+            if (isBlank(key)) {
+                continue;
             }
             instrumentKeyByBlock.put(i, key);
         }
@@ -413,8 +470,13 @@ public class ExcelTemplateMapperService {
                 }
                 int startCol = ACT_BLOCK_START_COL + (i * ACT_BLOCK_WIDTH);
 
-                BigDecimal grade = getDecimal(actividades, row, startCol, evaluator, formatter);
-                if (grade == null) {
+                boolean hasMainGradeInput = hasUserEnteredValue(actividades, row, startCol, formatter);
+                boolean hasExercisesInput = hasUserEnteredValueInRange(actividades, row, startCol + 1, startCol + 10, formatter);
+
+                BigDecimal grade = hasMainGradeInput
+                        ? getDecimal(actividades, row, startCol, evaluator, formatter)
+                        : null;
+                if (grade == null && hasExercisesInput) {
                     grade = computeGradeFromExercises(actividades, row, startCol + 1, evaluator, formatter);
                 }
                 if (grade == null) {
@@ -428,7 +490,138 @@ public class ExcelTemplateMapperService {
             }
         }
 
+        // If the student has no assigned grade data in the template, treat as non-existent.
+        students.removeIf(student -> student.getGrades() == null || student.getGrades().isEmpty());
+
         return students;
+    }
+
+    private List<ExcelImportRequest.EvaluationOverrideItem> parseEvaluationOverrides(
+            Sheet evaluaciones,
+            List<ExcelImportRequest.StudentItem> students,
+            List<ExcelImportRequest.UTItem> uts,
+            FormulaEvaluator evaluator,
+            DataFormatter formatter
+    ) {
+        if (evaluaciones == null || students == null || students.isEmpty() || uts == null || uts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Integer> evaluationPeriods = uts.stream()
+                .map(ExcelImportRequest.UTItem::getEvaluationPeriod)
+                .filter(period -> period != null && period > 0)
+                .distinct()
+                .sorted()
+                .toList();
+        if (evaluationPeriods.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, String> studentCodeByNormalizedName = new LinkedHashMap<>();
+        for (ExcelImportRequest.StudentItem student : students) {
+            studentCodeByNormalizedName.put(normalize(student.getFullName()), student.getStudentCode());
+        }
+
+        Map<String, ExcelImportRequest.EvaluationOverrideItem> unique = new LinkedHashMap<>();
+        int emptyStreak = 0;
+        int maxRow = Math.max(evaluaciones.getLastRowNum(), EVAL_ROW_STUDENT_START + students.size() + 30);
+
+        for (int row = EVAL_ROW_STUDENT_START; row <= maxRow; row++) {
+            String studentName = trimOrNull(getString(evaluaciones, row, EVAL_COL_STUDENT_NAME, evaluator, formatter));
+            if (isBlank(studentName)) {
+                emptyStreak++;
+                if (emptyStreak >= 20) {
+                    break;
+                }
+                continue;
+            }
+            emptyStreak = 0;
+
+            String studentCode = studentCodeByNormalizedName.get(normalize(studentName));
+            if (isBlank(studentCode)) {
+                continue;
+            }
+
+            for (Integer evaluationPeriod : evaluationPeriods) {
+                int offset = (evaluationPeriod - 1) * EVAL_BLOCK_WIDTH;
+                int numericCol = EVAL_COL_NUMERIC_BASE + offset;
+                int suggestedCol = EVAL_COL_SUGGESTED_BASE + offset;
+                int failedCol = EVAL_COL_FAILED_BASE + offset;
+
+                BigDecimal numericGrade = getDecimal(evaluaciones, row, numericCol, evaluator, formatter);
+                BigDecimal suggestedRaw = getDecimal(evaluaciones, row, suggestedCol, evaluator, formatter);
+                BigDecimal failedRaw = getDecimal(evaluaciones, row, failedCol, evaluator, formatter);
+
+                if (numericGrade == null && suggestedRaw == null && failedRaw == null) {
+                    continue;
+                }
+                if (numericGrade == null) {
+                    continue;
+                }
+
+                boolean allRAsPassed = failedRaw == null || failedRaw.compareTo(BigDecimal.ZERO) <= 0;
+                int suggestedBulletinGrade = suggestedRaw != null
+                        ? suggestedRaw.setScale(0, RoundingMode.HALF_UP).intValue()
+                        : calculateSuggestedBulletinGradeFromNumeric(numericGrade, allRAsPassed);
+
+                ExcelImportRequest.EvaluationOverrideItem item = new ExcelImportRequest.EvaluationOverrideItem();
+                item.setStudentCode(studentCode);
+                item.setEvaluationPeriod(evaluationPeriod);
+                item.setNumericGrade(scale4(numericGrade));
+                item.setSuggestedBulletinGrade(suggestedBulletinGrade);
+                item.setAllRAsPassed(allRAsPassed);
+
+                String key = normalize(studentCode) + "#" + evaluationPeriod;
+                unique.put(key, item);
+            }
+        }
+
+        return new ArrayList<>(unique.values());
+    }
+
+    private int calculateSuggestedBulletinGradeFromNumeric(BigDecimal numericGrade, boolean allRAsPassed) {
+        if (numericGrade.compareTo(BigDecimal.ONE) < 0) {
+            return 1;
+        }
+        if (numericGrade.compareTo(new BigDecimal("5.00")) < 0) {
+            return numericGrade.setScale(0, RoundingMode.DOWN).intValue();
+        }
+        if (!allRAsPassed) {
+            return 4;
+        }
+        return numericGrade.setScale(0, RoundingMode.HALF_UP).intValue();
+    }
+
+    private boolean hasUserEnteredValue(Sheet sheet,
+                                        int rowIdx,
+                                        int colIdx,
+                                        DataFormatter formatter) {
+        Row row = sheet.getRow(rowIdx);
+        if (row == null) {
+            return false;
+        }
+        Cell cell = row.getCell(colIdx);
+        if (cell == null) {
+            return false;
+        }
+        if (cell.getCellType() == CellType.FORMULA) {
+            return false;
+        }
+        String raw = formatter.formatCellValue(cell);
+        return raw != null && !raw.trim().isEmpty();
+    }
+
+    private boolean hasUserEnteredValueInRange(Sheet sheet,
+                                               int rowIdx,
+                                               int startCol,
+                                               int endCol,
+                                               DataFormatter formatter) {
+        for (int col = startCol; col <= endCol; col++) {
+            if (hasUserEnteredValue(sheet, rowIdx, col, formatter)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private BigDecimal computeGradeFromExercises(Sheet actividades,
@@ -476,13 +669,18 @@ public class ExcelTemplateMapperService {
         }
 
         try {
+            BigDecimal formattedValue = parseDecimal(formatter.formatCellValue(cell, evaluator));
+            if (formattedValue != null) {
+                return formattedValue;
+            }
+
             if (cell.getCellType() == CellType.FORMULA) {
                 CellType evaluatedType = evaluator.evaluateFormulaCell(cell);
                 if (evaluatedType == CellType.NUMERIC) {
                     return BigDecimal.valueOf(cell.getNumericCellValue());
                 }
                 if (evaluatedType == CellType.STRING) {
-                    return parseDecimal(formatter.formatCellValue(cell, evaluator));
+                    return parseDecimal(cell.getStringCellValue());
                 }
                 return null;
             }
@@ -496,7 +694,7 @@ public class ExcelTemplateMapperService {
         } catch (Exception ignored) {
             return null;
         }
-        return parseDecimal(formatter.formatCellValue(cell, evaluator));
+        return null;
     }
 
     private String getString(Sheet sheet,
@@ -533,6 +731,10 @@ public class ExcelTemplateMapperService {
 
     private BigDecimal scale2(BigDecimal value) {
         return value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal scale4(BigDecimal value) {
+        return value.setScale(4, RoundingMode.HALF_UP);
     }
 
     private String normalize(String value) {

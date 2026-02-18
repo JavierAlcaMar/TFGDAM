@@ -17,4 +17,6 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
     void deleteByInstrumentId(Long instrumentId);
 
     void deleteByInstrumentIdIn(List<Long> instrumentIds);
+
+    void deleteByStudentIdIn(List<Long> studentIds);
 }
