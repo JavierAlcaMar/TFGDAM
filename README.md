@@ -63,6 +63,8 @@ Si la base esta vacia, se insertan datos demo automaticamente con `CommandLineRu
 - `DELETE /instruments/{id}/ras/{raId}`
 - `POST /students`
 - `POST /imports/ra` (multipart: `file` + `moduleId`)
+- `POST /imports/excel-json` (JSON completo: modulo+RAs+UTs+instrumentos+alumnos+notas)
+- `POST /imports/excel-file` (multipart `.xlsx` plantilla oficial -> importacion completa)
 - `GET /imports/ra/{jobId}`
 
 ### Notas
@@ -169,6 +171,69 @@ Persistir RAs confirmados desde el JSON detectado:
 curl -X POST http://localhost:8080/modules/1/ras/import \
   -H 'Content-Type: application/json' \
   -d '{"ras":[{"code":"RA1","name":"Resultado importado 1","weightPercent":50},{"code":"RA2","name":"Resultado importado 2","weightPercent":50}]}'
+```
+
+Importar configuracion completa desde JSON (pensado para Python/Excel):
+
+```bash
+curl -X POST http://localhost:8080/imports/excel-json \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "module": {
+      "name": "Sistemas",
+      "academicYear": "2025-2026",
+      "teacherName": "Ana Docente"
+    },
+    "ras": [
+      {"code":"RA1","name":"Resultado 1","weightPercent":60},
+      {"code":"RA2","name":"Resultado 2","weightPercent":40}
+    ],
+    "uts": [
+      {
+        "key":"UT1",
+        "name":"UT1 Fundamentos",
+        "evaluationPeriod":1,
+        "raDistributions":[
+          {"raCode":"RA1","percent":70},
+          {"raCode":"RA2","percent":30}
+        ],
+        "instruments":[
+          {"key":"I1","name":"Examen UT1","weightPercent":100,"raCodes":["RA1","RA2"]}
+        ]
+      },
+      {
+        "key":"UT2",
+        "name":"UT2 Servicios",
+        "evaluationPeriod":2,
+        "raDistributions":[
+          {"raCode":"RA1","percent":30},
+          {"raCode":"RA2","percent":70}
+        ],
+        "instruments":[
+          {"key":"I2","name":"Proyecto UT2","weightPercent":100,"raCodes":["RA1","RA2"]}
+        ]
+      }
+    ],
+    "students":[
+      {
+        "studentCode":"A001",
+        "fullName":"Ana Perez",
+        "grades":[
+          {"instrumentKey":"I1","gradeValue":7.5},
+          {"instrumentKey":"I2","gradeValue":8.0}
+        ]
+      }
+    ]
+  }'
+```
+
+Importar directamente el `.xlsx` de plantilla oficial:
+
+```bash
+curl -X POST http://localhost:8080/imports/excel-file \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/ruta/source_template_rellenado.xlsx"
 ```
 
 Flujo de autenticacion y autorizacion (SARA):

@@ -1,8 +1,13 @@
 package com.sara.tfgdam.controller;
 
+import com.sara.tfgdam.dto.ExcelImportRequest;
+import com.sara.tfgdam.dto.ExcelImportResponse;
 import com.sara.tfgdam.dto.ImportJobResponse;
 import com.sara.tfgdam.mapper.DtoMapper;
+import com.sara.tfgdam.service.ExcelJsonImportService;
+import com.sara.tfgdam.service.ExcelTemplateMapperService;
 import com.sara.tfgdam.service.ImportService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -26,6 +32,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImportController {
 
     private final ImportService importService;
+    private final ExcelJsonImportService excelJsonImportService;
+    private final ExcelTemplateMapperService excelTemplateMapperService;
     private final DtoMapper mapper;
 
     @PostMapping(value = "/ra", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -33,6 +41,19 @@ public class ImportController {
     public ImportJobResponse createRAImportJob(@RequestParam Long moduleId,
                                                @RequestPart("file") MultipartFile file) {
         return mapper.toImportJobResponse(importService.createRAImportJob(moduleId, file));
+    }
+
+    @PostMapping(value = "/excel-json", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ExcelImportResponse importExcelJson(@Valid @RequestBody ExcelImportRequest request) {
+        return excelJsonImportService.importExcelJson(request);
+    }
+
+    @PostMapping(value = "/excel-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public ExcelImportResponse importExcelFile(@RequestPart("file") MultipartFile file) {
+        ExcelImportRequest request = excelTemplateMapperService.mapTemplate(file);
+        return excelJsonImportService.importExcelJson(request);
     }
 
     @GetMapping("/ra/{jobId}")
