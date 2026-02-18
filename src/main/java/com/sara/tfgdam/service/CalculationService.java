@@ -7,6 +7,7 @@ import com.sara.tfgdam.domain.entity.Instrument;
 import com.sara.tfgdam.domain.entity.InstrumentRA;
 import com.sara.tfgdam.domain.entity.LearningOutcomeRA;
 import com.sara.tfgdam.domain.entity.Student;
+import com.sara.tfgdam.domain.entity.StudentEvaluationOverride;
 import com.sara.tfgdam.domain.entity.TeachingUnitUT;
 import com.sara.tfgdam.domain.entity.UTRALink;
 import com.sara.tfgdam.dto.ActivityGradeDto;
@@ -26,6 +27,7 @@ import com.sara.tfgdam.repository.InstrumentRARepository;
 import com.sara.tfgdam.repository.InstrumentRepository;
 import com.sara.tfgdam.repository.LearningOutcomeRARepository;
 import com.sara.tfgdam.repository.StudentRepository;
+import com.sara.tfgdam.repository.StudentEvaluationOverrideRepository;
 import com.sara.tfgdam.repository.TeachingUnitUTRepository;
 import com.sara.tfgdam.repository.UTRALinkRepository;
 import com.sara.tfgdam.validation.ConfigurationValidator;
@@ -64,6 +66,7 @@ public class CalculationService {
     private final InstrumentRepository instrumentRepository;
     private final InstrumentRARepository instrumentRARepository;
     private final StudentRepository studentRepository;
+    private final StudentEvaluationOverrideRepository studentEvaluationOverrideRepository;
     private final GradeRepository gradeRepository;
     private final ConfigurationValidator configurationValidator;
 
@@ -106,10 +109,30 @@ public class CalculationService {
                 .toList();
 
         Map<Long, Map<Long, BigDecimal>> gradesByStudent = buildGradesByStudent(students);
+        Map<Long, StudentEvaluationOverride> overridesByStudentId = studentEvaluationOverrideRepository
+                .findByStudent_Module_IdAndEvaluationPeriod(moduleId, evaluationPeriod).stream()
+                .collect(Collectors.toMap(
+                        override -> override.getStudent().getId(),
+                        override -> override,
+                        (first, second) -> first
+                ));
 
         List<StudentEvaluationReportRow> rows = new ArrayList<>();
 
         for (Student student : students) {
+            StudentEvaluationOverride override = overridesByStudentId.get(student.getId());
+            if (override != null) {
+                rows.add(StudentEvaluationReportRow.builder()
+                        .studentId(student.getId())
+                        .studentCode(student.getStudentCode())
+                        .studentName(student.getFullName())
+                        .numericGrade(scale(override.getNumericGrade()))
+                        .suggestedBulletinGrade(override.getSuggestedBulletinGrade())
+                        .allRAsPassed(Boolean.TRUE.equals(override.getAllRAsPassed()))
+                        .build());
+                continue;
+            }
+
             StudentComputation computation = computeForStudent(
                     context,
                     gradesByStudent.getOrDefault(student.getId(), Map.of())

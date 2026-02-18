@@ -34,10 +34,12 @@ import com.sara.tfgdam.exception.ResourceNotFoundException;
 import com.sara.tfgdam.repository.ActivityRepository;
 import com.sara.tfgdam.repository.CourseModuleRepository;
 import com.sara.tfgdam.repository.GradeRepository;
+import com.sara.tfgdam.repository.ImportJobRepository;
 import com.sara.tfgdam.repository.InstrumentRARepository;
 import com.sara.tfgdam.repository.InstrumentRepository;
 import com.sara.tfgdam.repository.LearningOutcomeRARepository;
 import com.sara.tfgdam.repository.StudentRepository;
+import com.sara.tfgdam.repository.StudentEvaluationOverrideRepository;
 import com.sara.tfgdam.repository.TeacherRepository;
 import com.sara.tfgdam.repository.TeachingUnitUTRepository;
 import com.sara.tfgdam.repository.UTRALinkRepository;
@@ -66,7 +68,9 @@ public class ModuleSetupService {
     private final InstrumentRepository instrumentRepository;
     private final InstrumentRARepository instrumentRARepository;
     private final StudentRepository studentRepository;
+    private final StudentEvaluationOverrideRepository studentEvaluationOverrideRepository;
     private final GradeRepository gradeRepository;
+    private final ImportJobRepository importJobRepository;
     private final ConfigurationValidator configurationValidator;
 
     @Transactional
@@ -87,6 +91,65 @@ public class ModuleSetupService {
                 .teacher(teacher)
                 .build();
         return courseModuleRepository.save(module);
+    }
+
+    @Transactional
+    public void deleteModule(Long moduleId) {
+        CourseModule module = getModule(moduleId);
+
+        List<Student> students = studentRepository.findByModuleId(moduleId);
+        List<Long> studentIds = students.stream().map(Student::getId).toList();
+
+        List<Activity> activities = activityRepository.findByModuleId(moduleId);
+        List<Long> activityIds = activities.stream().map(Activity::getId).toList();
+
+        List<Instrument> instruments = activityIds.isEmpty()
+                ? List.of()
+                : instrumentRepository.findByActivityIdIn(activityIds);
+        List<Long> instrumentIds = instruments.stream().map(Instrument::getId).toList();
+
+        List<TeachingUnitUT> uts = teachingUnitUTRepository.findByModuleId(moduleId);
+        List<Long> utIds = uts.stream().map(TeachingUnitUT::getId).toList();
+
+        List<Long> raIds = learningOutcomeRARepository.findByModuleId(moduleId).stream()
+                .map(LearningOutcomeRA::getId)
+                .toList();
+
+        if (!instrumentIds.isEmpty()) {
+            gradeRepository.deleteByInstrumentIdIn(instrumentIds);
+            instrumentRARepository.deleteByInstrumentIdIn(instrumentIds);
+            instrumentRepository.deleteAllById(instrumentIds);
+        }
+
+        if (!studentIds.isEmpty()) {
+            studentEvaluationOverrideRepository.deleteByStudent_Module_Id(moduleId);
+            gradeRepository.deleteByStudentIdIn(studentIds);
+            studentRepository.deleteAllById(studentIds);
+        }
+
+        if (!utIds.isEmpty()) {
+            for (Long utId : utIds) {
+                utraLinkRepository.deleteByTeachingUnitId(utId);
+            }
+        }
+
+        if (!activityIds.isEmpty()) {
+            activityRepository.deleteAllById(activityIds);
+        }
+
+        if (!utIds.isEmpty()) {
+            teachingUnitUTRepository.deleteAllById(utIds);
+        }
+
+        if (!raIds.isEmpty()) {
+            for (Long raId : raIds) {
+                instrumentRARepository.deleteByLearningOutcomeId(raId);
+            }
+            learningOutcomeRARepository.deleteAllById(raIds);
+        }
+
+        importJobRepository.deleteByModuleId(moduleId);
+        courseModuleRepository.delete(module);
     }
 
     @Transactional

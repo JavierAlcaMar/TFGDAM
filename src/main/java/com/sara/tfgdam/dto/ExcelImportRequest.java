@@ -32,6 +32,9 @@ public class ExcelImportRequest {
     @Valid
     private List<StudentItem> students;
 
+    @Valid
+    private List<EvaluationOverrideItem> evaluationOverrides;
+
     @Getter
     @Setter
     public static class UTItem {
@@ -112,5 +115,28 @@ public class ExcelImportRequest {
         @DecimalMin(value = "0.00", message = "gradeValue must be >= 0")
         @DecimalMax(value = "10.00", message = "gradeValue must be <= 10")
         private BigDecimal gradeValue;
+    }
+
+    @Getter
+    @Setter
+    public static class EvaluationOverrideItem {
+
+        @NotBlank(message = "studentCode is required for evaluationOverride")
+        private String studentCode;
+
+        @NotNull(message = "evaluationPeriod is required for evaluationOverride")
+        @Positive(message = "evaluationPeriod must be > 0")
+        private Integer evaluationPeriod;
+
+        @NotNull(message = "numericGrade is required for evaluationOverride")
+        @DecimalMin(value = "0.00", message = "numericGrade must be >= 0")
+        @DecimalMax(value = "10.00", message = "numericGrade must be <= 10")
+        private BigDecimal numericGrade;
+
+        @NotNull(message = "suggestedBulletinGrade is required for evaluationOverride")
+        private Integer suggestedBulletinGrade;
+
+        @NotNull(message = "allRAsPassed is required for evaluationOverride")
+        private Boolean allRAsPassed;
     }
 }
