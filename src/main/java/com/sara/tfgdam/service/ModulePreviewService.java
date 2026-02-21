@@ -1,11 +1,15 @@
 package com.sara.tfgdam.service;
 
 import com.sara.tfgdam.domain.entity.Grade;
+import com.sara.tfgdam.domain.entity.InstrumentExerciseGrade;
+import com.sara.tfgdam.domain.entity.InstrumentExerciseWeight;
 import com.sara.tfgdam.dto.ModulePreviewResponse;
 import com.sara.tfgdam.exception.ResourceNotFoundException;
 import com.sara.tfgdam.repository.ActivityRepository;
 import com.sara.tfgdam.repository.CourseModuleRepository;
 import com.sara.tfgdam.repository.GradeRepository;
+import com.sara.tfgdam.repository.InstrumentExerciseGradeRepository;
+import com.sara.tfgdam.repository.InstrumentExerciseWeightRepository;
 import com.sara.tfgdam.repository.InstrumentRARepository;
 import com.sara.tfgdam.repository.InstrumentRepository;
 import com.sara.tfgdam.repository.LearningOutcomeRARepository;
@@ -33,6 +37,8 @@ public class ModulePreviewService {
     private final ActivityRepository activityRepository;
     private final InstrumentRepository instrumentRepository;
     private final InstrumentRARepository instrumentRARepository;
+    private final InstrumentExerciseWeightRepository instrumentExerciseWeightRepository;
+    private final InstrumentExerciseGradeRepository instrumentExerciseGradeRepository;
     private final StudentRepository studentRepository;
     private final GradeRepository gradeRepository;
 
@@ -82,6 +88,25 @@ public class ModulePreviewService {
                     .forEach(ids -> ids.sort(Comparator.naturalOrder()));
         }
 
+        Map<Long, List<ModulePreviewResponse.ExerciseWeightItem>> exerciseWeightsByInstrumentId = new HashMap<>();
+        if (!instrumentIds.isEmpty()) {
+            Map<Long, List<InstrumentExerciseWeight>> weightsByInstrument = instrumentExerciseWeightRepository
+                    .findByInstrumentIdIn(instrumentIds).stream()
+                    .collect(Collectors.groupingBy(item -> item.getInstrument().getId()));
+
+            for (Long instrumentId : instrumentIds) {
+                List<ModulePreviewResponse.ExerciseWeightItem> weights = weightsByInstrument
+                        .getOrDefault(instrumentId, List.of()).stream()
+                        .sorted(Comparator.comparing(InstrumentExerciseWeight::getExerciseIndex))
+                        .map(item -> ModulePreviewResponse.ExerciseWeightItem.builder()
+                                .exerciseIndex(item.getExerciseIndex())
+                                .weightPercent(item.getWeightPercent())
+                                .build())
+                        .toList();
+                exerciseWeightsByInstrumentId.put(instrumentId, weights);
+            }
+        }
+
         var students = studentRepository.findByModuleId(moduleId).stream()
                 .sorted(Comparator.comparing(item -> item.getStudentCode().toLowerCase()))
                 .toList();
@@ -93,6 +118,25 @@ public class ModulePreviewService {
                         .comparing((Grade item) -> item.getStudent().getId())
                         .thenComparing(item -> item.getInstrument().getId()))
                 .toList();
+
+        Map<String, List<ModulePreviewResponse.ExerciseGradeItem>> exerciseGradesByKey = new HashMap<>();
+        if (!studentIds.isEmpty()) {
+            Map<String, List<InstrumentExerciseGrade>> grouped = instrumentExerciseGradeRepository
+                    .findByStudent_IdIn(studentIds).stream()
+                    .collect(Collectors.groupingBy(item ->
+                            item.getStudent().getId() + "-" + item.getInstrument().getId()));
+
+            grouped.forEach((key, list) -> exerciseGradesByKey.put(
+                    key,
+                    list.stream()
+                            .sorted(Comparator.comparing(InstrumentExerciseGrade::getExerciseIndex))
+                            .map(item -> ModulePreviewResponse.ExerciseGradeItem.builder()
+                                    .exerciseIndex(item.getExerciseIndex())
+                                    .gradeValue(item.getGradeValue())
+                                    .build())
+                            .toList()
+            ));
+        }
 
         return ModulePreviewResponse.builder()
                 .moduleId(module.getId())
@@ -138,6 +182,7 @@ public class ModulePreviewService {
                                 .name(item.getName())
                                 .weightPercent(item.getWeightPercent())
                                 .raIds(raIdsByInstrumentId.getOrDefault(item.getId(), List.of()))
+                                .exerciseWeights(exerciseWeightsByInstrumentId.getOrDefault(item.getId(), List.of()))
                                 .build())
                         .toList())
                 .students(students.stream()
@@ -153,6 +198,10 @@ public class ModulePreviewService {
                                 .studentId(item.getStudent().getId())
                                 .instrumentId(item.getInstrument().getId())
                                 .gradeValue(item.getGradeValue())
+                                .exerciseGrades(exerciseGradesByKey.getOrDefault(
+                                        item.getStudent().getId() + "-" + item.getInstrument().getId(),
+                                        List.of()
+                                ))
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

@@ -41,11 +41,15 @@ VITE_API_BASE_URL=/api
    - eliminar modulo (`DELETE /modules/{id}`)
 3. Importacion:
    - PDF de RAs (`POST /imports/ra`) + consulta de job (`GET /imports/ra/{jobId}`) + guardado de RAs (`POST /modules/{id}/ras/import`)
-   - XLSX de plantilla oficial (`POST /imports/excel-file`)
+   - XLSX de plantilla oficial (`POST /imports/excel-file`), con reemplazo de modulo si `moduleId` existe
 4. Vista previa por modulo:
    - estructura base (`GET /modules/{id}/preview`)
    - evaluaciones (`GET /modules/{id}/reports/evaluation/{n}`)
    - final (`GET /modules/{id}/reports/final`)
+   - edicion de ejercicios por alumno/instrumento + guardado (`POST /grades`)
+   - descarga Excel del modulo (`GET /modules/{id}/export/excel`)
+   - descarga plantilla base (`GET /modules/export/template/base`)
+   - descarga plantilla rellenada (`GET /modules/export/template/filled`)
 
 ## Endpoints consumidos
 
@@ -59,6 +63,10 @@ VITE_API_BASE_URL=/api
 - `GET /modules/{id}/preview`
 - `GET /modules/{id}/reports/evaluation/{n}`
 - `GET /modules/{id}/reports/final`
+- `POST /grades`
+- `GET /modules/{id}/export/excel`
+- `GET /modules/export/template/base`
+- `GET /modules/export/template/filled`
 
 ## Estructura relevante
 
@@ -72,5 +80,7 @@ VITE_API_BASE_URL=/api
 ## Notas
 
 - En importacion PDF, el `moduleId` es obligatorio.
-- En importacion XLSX, el backend crea/importa el modulo completo y devuelve `moduleId`; el frontend lo selecciona automaticamente.
+- En importacion XLSX, `moduleId` es opcional: si existe se reemplaza ese modulo; si no, se crea uno nuevo.
+- Tras importar XLSX, el frontend selecciona automaticamente el `moduleId` devuelto por backend.
 - La UI ordena codigos de forma natural (`RA2` antes que `RA10`) en las tablas de preview.
+

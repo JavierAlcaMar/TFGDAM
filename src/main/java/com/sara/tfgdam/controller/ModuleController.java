@@ -16,11 +16,18 @@ import com.sara.tfgdam.dto.UpdateUTRALinkRequest;
 import com.sara.tfgdam.dto.UpsertUTRALinkRequest;
 import com.sara.tfgdam.mapper.DtoMapper;
 import com.sara.tfgdam.service.CalculationService;
+import com.sara.tfgdam.service.ExcelTemplateExportService;
 import com.sara.tfgdam.service.ModuleSetupService;
 import com.sara.tfgdam.service.ModulePreviewService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,9 +36,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -44,6 +53,7 @@ public class ModuleController {
     private final ModuleSetupService moduleSetupService;
     private final ModulePreviewService modulePreviewService;
     private final CalculationService calculationService;
+    private final ExcelTemplateExportService excelTemplateExportService;
     private final DtoMapper mapper;
 
     @PostMapping
@@ -125,5 +135,59 @@ public class ModuleController {
     @GetMapping("/{id}/preview")
     public ModulePreviewResponse modulePreview(@PathVariable Long id) {
         return modulePreviewService.getPreview(id);
+    }
+
+    @GetMapping("/{id}/export/excel")
+    public ResponseEntity<ByteArrayResource> exportModuleExcel(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+            HttpServletRequest request
+    ) {
+        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
+                .replacePath(null)
+                .build()
+                .toUriString();
+
+        var exported = excelTemplateExportService.exportModuleExcel(id, authorizationHeader, baseUrl);
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(exported.filename())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(exported.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentLength(exported.content().length)
+                .body(new ByteArrayResource(exported.content()));
+    }
+
+    @GetMapping("/export/template/base")
+    public ResponseEntity<ByteArrayResource> exportBaseTemplateExcel() {
+        var exported = excelTemplateExportService.exportBaseTemplateExcel();
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(exported.filename())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(exported.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentLength(exported.content().length)
+                .body(new ByteArrayResource(exported.content()));
+    }
+
+    @GetMapping("/export/template/filled")
+    public ResponseEntity<ByteArrayResource> exportFilledTemplateExcel() {
+        var exported = excelTemplateExportService.exportFilledTemplateExcel();
+
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename(exported.filename())
+                .build();
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(exported.contentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .contentLength(exported.content().length)
+                .body(new ByteArrayResource(exported.content()));
     }
 }

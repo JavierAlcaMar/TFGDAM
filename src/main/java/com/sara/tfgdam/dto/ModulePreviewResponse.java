@@ -65,6 +65,14 @@ public class ModulePreviewResponse {
         String name;
         BigDecimal weightPercent;
         List<Long> raIds;
+        List<ExerciseWeightItem> exerciseWeights;
+    }
+
+    @Value
+    @Builder
+    public static class ExerciseWeightItem {
+        Integer exerciseIndex;
+        BigDecimal weightPercent;
     }
 
     @Value
@@ -81,6 +89,14 @@ public class ModulePreviewResponse {
         Long id;
         Long studentId;
         Long instrumentId;
+        BigDecimal gradeValue;
+        List<ExerciseGradeItem> exerciseGrades;
+    }
+
+    @Value
+    @Builder
+    public static class ExerciseGradeItem {
+        Integer exerciseIndex;
         BigDecimal gradeValue;
     }
 }

@@ -37,7 +37,10 @@ function ImportView({
           Subir y extraer
         </button>
       </form>
-      <p>PDF: requiere modulo ID y crea un job de extraccion de RAs. XLSX: importa la plantilla completa directamente.</p>
+      <p>
+        PDF: requiere modulo ID y crea un job de extraccion de RAs. XLSX: si indicas modulo ID existente lo reemplaza;
+        si lo dejas vacio o no existe crea un modulo nuevo.
+      </p>
 
       <form className="inline-actions" onSubmit={onLoadImportJob}>
         <input

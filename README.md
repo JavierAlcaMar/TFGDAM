@@ -17,12 +17,12 @@ No se usa Flyway/Liquibase en este repo. El esquema se crea con JPA (`spring.jpa
 ## Arranque
 
 1. Levanta MySQL y crea credenciales (o usa las de defecto).
-2. Configura variables opcionales:
+2. Configura variables opcionales (Spring):
 
 ```bash
-export SARA_DB_URL='jdbc:mysql://localhost:3306/sara?createDatabaseIfNotExist=true&serverTimezone=UTC'
-export SARA_DB_USER='root'
-export SARA_DB_PASSWORD=''
+export SPRING_DATASOURCE_URL='jdbc:mysql://localhost:3306/sara?createDatabaseIfNotExist=true&serverTimezone=UTC'
+export SPRING_DATASOURCE_USERNAME='root'
+export SPRING_DATASOURCE_PASSWORD=''
 ```
 
 3. Ejecuta:
@@ -74,8 +74,12 @@ Si la base esta vacia, se insertan datos demo automaticamente con `CommandLineRu
 ### Reportes
 
 - `GET /students/{id}/report?moduleId={moduleId}`
+- `GET /modules/{id}/preview`
 - `GET /modules/{id}/reports/evaluation/{n}`
 - `GET /modules/{id}/reports/final`
+- `GET /modules/{id}/export/excel` (descarga `.xlsx` rellenado desde plantilla oficial usando script Python)
+- `GET /modules/export/template/base` (descarga plantilla base vacia)
+- `GET /modules/export/template/filled` (descarga plantilla rellenada de referencia)
 
 ### Auth y usuarios
 
@@ -250,6 +254,53 @@ Notas sobre importacion desde plantilla:
 - Se toman `Datos Iniciales` y `Actividades` para crear modulo, RAs, UTs, instrumentos, alumnos y notas.
 - Si existe la hoja `Evaluaciones`, tambien se importan los valores de evaluacion por alumno (`nota numerica`, `boletin sugerido`, `RAs superados`) como overrides por evaluacion.
 - En `GET /modules/{id}/reports/evaluation/{n}`, si hay override para alumno+evaluacion se muestra ese valor; si no, se usa el calculo dinamico.
+- Al importar por `POST /imports/excel-file`, se guarda una copia del `.xlsx` original por modulo en `storage/imports-ra/module-{id}-source-template.xlsx`.
+- En `POST /imports/excel-file`, si `moduleId` existe se reemplazan sus datos; si no existe o viene vacio, se crea modulo nuevo.
+
+Exportar plantilla oficial (`source_template.xlsx`) con datos del backend mediante Python:
+
+```bash
+pip install openpyxl
+
+python scripts/export_backend_template.py \
+  --base-url http://localhost:8080 \
+  --token "$TOKEN" \
+  --module-id 1 \
+  --template "C:/Users/ignac/Downloads/source_template.xlsx" \
+  --output "C:/Users/ignac/Downloads/source_template_exportado.xlsx"
+```
+
+Notas de exportacion:
+
+- El script usa `GET /modules/{id}/preview` y `GET /modules/{id}/reports/evaluation/{n}`.
+- Rellena las hojas `Datos Iniciales`, `Actividades` y `Evaluaciones`.
+- Mantiene la plantilla original y genera un archivo nuevo en `--output`.
+- `GET /modules/{id}/export/excel` usa por defecto snapshot importado del modulo (`storage/imports-ra/module-{id}-source-template.xlsx`) si `sara.export.use-import-snapshot=true`.
+- El snapshot solo se usa si es compatible con el modulo actual (nombre de modulo y estructura RA/UT/instrumentos); si no, se usa la plantilla configurada en `sara.export.template-path`.
+
+Descarga directa desde backend (sin comando manual):
+
+```bash
+curl -L "http://localhost:8080/modules/1/export/excel" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o "source_template_exportado.xlsx"
+```
+
+Descargar plantilla base vacia:
+
+```bash
+curl -L "http://localhost:8080/modules/export/template/base" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o "source_template_unprotected.xlsx"
+```
+
+Descargar plantilla rellenada de referencia:
+
+```bash
+curl -L "http://localhost:8080/modules/export/template/filled" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o "source_template_rellenada_unprotected.xlsx"
+```
 
 Flujo de autenticacion y autorizacion (SARA):
 

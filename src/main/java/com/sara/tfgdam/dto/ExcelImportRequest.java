@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -88,6 +91,9 @@ public class ExcelImportRequest {
 
         @NotEmpty(message = "raCodes cannot be empty")
         private List<@NotBlank(message = "raCode cannot be blank") String> raCodes;
+
+        @Valid
+        private List<ExerciseWeightItem> exerciseWeights;
     }
 
     @Getter
@@ -110,6 +116,39 @@ public class ExcelImportRequest {
 
         @NotBlank(message = "instrumentKey is required")
         private String instrumentKey;
+
+        @NotNull(message = "gradeValue is required")
+        @DecimalMin(value = "0.00", message = "gradeValue must be >= 0")
+        @DecimalMax(value = "10.00", message = "gradeValue must be <= 10")
+        private BigDecimal gradeValue;
+
+        @Valid
+        private List<ExerciseGradeItem> exerciseGrades;
+    }
+
+    @Getter
+    @Setter
+    public static class ExerciseWeightItem {
+
+        @NotNull(message = "exerciseIndex is required")
+        @Min(value = 1, message = "exerciseIndex must be >= 1")
+        @Max(value = 10, message = "exerciseIndex must be <= 10")
+        private Integer exerciseIndex;
+
+        @NotNull(message = "weightPercent is required")
+        @DecimalMin(value = "0.00", message = "weightPercent must be >= 0")
+        @DecimalMax(value = "100.00", message = "weightPercent must be <= 100")
+        private BigDecimal weightPercent;
+    }
+
+    @Getter
+    @Setter
+    public static class ExerciseGradeItem {
+
+        @NotNull(message = "exerciseIndex is required")
+        @Min(value = 1, message = "exerciseIndex must be >= 1")
+        @Max(value = 10, message = "exerciseIndex must be <= 10")
+        private Integer exerciseIndex;
 
         @NotNull(message = "gradeValue is required")
         @DecimalMin(value = "0.00", message = "gradeValue must be >= 0")
@@ -138,5 +177,8 @@ public class ExcelImportRequest {
 
         @NotNull(message = "allRAsPassed is required for evaluationOverride")
         private Boolean allRAsPassed;
+
+        @PositiveOrZero(message = "failedRasCount must be >= 0")
+        private Integer failedRasCount;
     }
 }
