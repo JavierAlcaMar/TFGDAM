@@ -2,27 +2,26 @@ package com.sara.tfgdam.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Getter
 @Setter
-public class GradeEntryRequest {
+public class ExerciseGradeEntryRequest {
 
-    @NotNull(message = "studentId is required")
-    private Long studentId;
+    @NotNull(message = "exerciseIndex is required")
+    @Min(value = 1, message = "exerciseIndex must be >= 1")
+    @Max(value = 10, message = "exerciseIndex must be <= 10")
+    private Integer exerciseIndex;
 
-    @NotNull(message = "instrumentId is required")
-    private Long instrumentId;
-
+    @NotNull(message = "gradeValue is required")
     @DecimalMin(value = "0.00", message = "gradeValue must be >= 0")
     @DecimalMax(value = "10.00", message = "gradeValue must be <= 10")
     private BigDecimal gradeValue;
-
-    @jakarta.validation.Valid
-    private List<ExerciseGradeEntryRequest> exerciseGrades;
 }
+

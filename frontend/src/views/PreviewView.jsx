@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const TABS = {
   ras: 'ras',
@@ -26,6 +26,13 @@ function formatNumber(value, digits = 2) {
   return n.toFixed(digits)
 }
 
+function parseInputNumber(raw) {
+  const text = String(raw ?? '').trim()
+  if (!text) return null
+  const parsed = Number(text.replace(',', '.'))
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 function PreviewView({
   busy,
   isAuthenticated,
@@ -35,8 +42,15 @@ function PreviewView({
   evaluationReports,
   finalReport,
   onLoadPreview,
+  onDownloadExcel,
+  onDownloadBaseTemplate,
+  onDownloadFilledTemplate,
+  onSaveGrades,
 }) {
   const [activeTab, setActiveTab] = useState(TABS.ras)
+  const [exerciseEdits, setExerciseEdits] = useState({})
+  const [exerciseStudentId, setExerciseStudentId] = useState('')
+  const [exerciseInstrumentId, setExerciseInstrumentId] = useState('')
 
   const ras = previewData?.ras || []
   const uts = previewData?.uts || []
@@ -100,6 +114,43 @@ function PreviewView({
     return map
   }, [grades])
 
+  const exerciseByStudentInstrument = useMemo(() => {
+    const map = new Map()
+    grades.forEach((grade) => {
+      const key = `${grade.studentId}-${grade.instrumentId}`
+      const byIndex = new Map()
+      ;(grade.exerciseGrades || []).forEach((item) => {
+        const index = Number(item?.exerciseIndex)
+        const value = toNumber(item?.gradeValue)
+        if (Number.isFinite(index) && index >= 1 && index <= 10 && value !== null) {
+          byIndex.set(index, value)
+        }
+      })
+      map.set(key, byIndex)
+    })
+    return map
+  }, [grades])
+
+  const exerciseWeightByInstrument = useMemo(() => {
+    const map = new Map()
+    instruments.forEach((instrument) => {
+      const byIndex = new Map()
+      ;(instrument.exerciseWeights || []).forEach((item) => {
+        const index = Number(item?.exerciseIndex)
+        const weight = toNumber(item?.weightPercent)
+        if (Number.isFinite(index) && index >= 1 && index <= 10 && weight !== null && weight > 0) {
+          byIndex.set(index, weight)
+        }
+      })
+      map.set(`${instrument.id}`, byIndex)
+    })
+    return map
+  }, [instruments])
+
+  useEffect(() => {
+    setExerciseEdits({})
+  }, [grades])
+
   const sortedInstruments = useMemo(
     () =>
       [...instruments].sort((a, b) => {
@@ -120,6 +171,24 @@ function PreviewView({
       }),
     [instruments, utById, activityById],
   )
+
+  useEffect(() => {
+    if (!sortedStudents.length || !sortedInstruments.length) {
+      setExerciseStudentId('')
+      setExerciseInstrumentId('')
+      return
+    }
+
+    const studentExists = sortedStudents.some((item) => String(item.id) === String(exerciseStudentId))
+    if (!studentExists) {
+      setExerciseStudentId(String(sortedStudents[0].id))
+    }
+
+    const instrumentExists = sortedInstruments.some((item) => String(item.id) === String(exerciseInstrumentId))
+    if (!instrumentExists) {
+      setExerciseInstrumentId(String(sortedInstruments[0].id))
+    }
+  }, [sortedStudents, sortedInstruments, exerciseStudentId, exerciseInstrumentId])
 
   const sortedEvaluationReports = useMemo(
     () =>
@@ -142,6 +211,125 @@ function PreviewView({
     [sortedRas],
   )
 
+  const getExerciseInputValue = (studentId, instrumentId, exerciseIndex) => {
+    const key = `${studentId}-${instrumentId}-${exerciseIndex}`
+    if (Object.prototype.hasOwnProperty.call(exerciseEdits, key)) {
+      return exerciseEdits[key]
+    }
+    const persisted = exerciseByStudentInstrument.get(`${studentId}-${instrumentId}`)?.get(exerciseIndex)
+    return persisted == null ? '' : String(persisted)
+  }
+
+  const onExerciseInputChange = (studentId, instrumentId, exerciseIndex, value) => {
+    const key = `${studentId}-${instrumentId}-${exerciseIndex}`
+    setExerciseEdits((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const getExerciseValueForComputation = (studentId, instrumentId, exerciseIndex) => {
+    const inputKey = `${studentId}-${instrumentId}-${exerciseIndex}`
+    if (Object.prototype.hasOwnProperty.call(exerciseEdits, inputKey)) {
+      return parseInputNumber(exerciseEdits[inputKey])
+    }
+    return exerciseByStudentInstrument.get(`${studentId}-${instrumentId}`)?.get(exerciseIndex) ?? null
+  }
+
+  const getPreviewAverageByExercises = (studentId, instrumentId) => {
+    const weights = exerciseWeightByInstrument.get(`${instrumentId}`) || new Map()
+    let weighted = 0
+    let totalWeight = 0
+
+    for (let idx = 1; idx <= 10; idx += 1) {
+      const weight = toNumber(weights.get(idx)) || 0
+      if (weight <= 0) continue
+      const grade = getExerciseValueForComputation(studentId, instrumentId, idx)
+      weighted += (grade ?? 0) * weight
+      totalWeight += weight
+    }
+
+    if (totalWeight <= 0) return null
+    return weighted / totalWeight
+  }
+
+  const editedExercisePairs = useMemo(() => {
+    const pairs = new Set()
+    Object.keys(exerciseEdits).forEach((key) => {
+      const [studentId, instrumentId] = key.split('-')
+      if (studentId && instrumentId) {
+        pairs.add(`${studentId}-${instrumentId}`)
+      }
+    })
+    return pairs
+  }, [exerciseEdits])
+
+  const selectedExercisePreview = useMemo(() => {
+    const studentId = Number(exerciseStudentId)
+    const instrumentId = Number(exerciseInstrumentId)
+    if (!Number.isFinite(studentId) || !Number.isFinite(instrumentId)) return null
+    return getPreviewAverageByExercises(studentId, instrumentId)
+  }, [exerciseStudentId, exerciseInstrumentId, exerciseEdits, exerciseByStudentInstrument, exerciseWeightByInstrument])
+
+  const selectedPersistedAverage = useMemo(() => {
+    const studentId = Number(exerciseStudentId)
+    const instrumentId = Number(exerciseInstrumentId)
+    if (!Number.isFinite(studentId) || !Number.isFinite(instrumentId)) return null
+    return toNumber(gradeByStudentInstrument.get(`${studentId}-${instrumentId}`))
+  }, [exerciseStudentId, exerciseInstrumentId, gradeByStudentInstrument])
+
+  const onSaveSelectedExercises = async () => {
+    const studentId = Number(exerciseStudentId)
+    const instrumentId = Number(exerciseInstrumentId)
+    if (!Number.isFinite(studentId) || !Number.isFinite(instrumentId)) {
+      window.alert('Selecciona alumno e instrumento.')
+      return
+    }
+
+    const exerciseGrades = []
+    let hasAnyChange = false
+    const persistedExercises = exerciseByStudentInstrument.get(`${studentId}-${instrumentId}`) || new Map()
+
+    for (let idx = 1; idx <= 10; idx += 1) {
+      const raw = String(getExerciseInputValue(studentId, instrumentId, idx) ?? '').trim()
+      const persisted = persistedExercises.get(idx)
+      if (!raw) {
+        if (persisted != null) hasAnyChange = true
+        continue
+      }
+
+      const parsed = Number(raw.replace(',', '.'))
+      if (!Number.isFinite(parsed) || parsed < 0 || parsed > 10) {
+        window.alert(`Valor invalido en ejercicio ${idx}. Debe estar entre 0 y 10.`)
+        return
+      }
+
+      if (persisted == null || Math.abs(persisted - parsed) >= 0.000001) {
+        hasAnyChange = true
+      }
+
+      exerciseGrades.push({
+        exerciseIndex: idx,
+        gradeValue: parsed,
+      })
+    }
+
+    if (!hasAnyChange) {
+      window.alert('No hay cambios de ejercicios para guardar.')
+      return
+    }
+
+    const persistedMainGrade = toNumber(gradeByStudentInstrument.get(`${studentId}-${instrumentId}`))
+    const saved = await onSaveGrades([
+      {
+        studentId,
+        instrumentId,
+        gradeValue: persistedMainGrade,
+        exerciseGrades,
+      },
+    ])
+    if (saved) {
+      setExerciseEdits({})
+    }
+  }
+
   return (
     <section className="panel">
       <h2>Vista previa Excel por modulo</h2>
@@ -152,6 +340,15 @@ function PreviewView({
         </label>
         <button type="submit" disabled={busy || !isAuthenticated}>
           Cargar vista previa
+        </button>
+        <button type="button" onClick={onDownloadExcel} disabled={busy || !isAuthenticated || !String(moduleId || '').trim()}>
+          Descargar Excel
+        </button>
+        <button type="button" onClick={onDownloadBaseTemplate} disabled={busy || !isAuthenticated}>
+          Descargar plantilla base
+        </button>
+        <button type="button" onClick={onDownloadFilledTemplate} disabled={busy || !isAuthenticated}>
+          Descargar plantilla rellenada
         </button>
       </form>
 
@@ -347,31 +544,132 @@ function PreviewView({
           {activeTab === TABS.notas && (
             <div className="report-wrap">
               <h3>Hoja Actividades: notas por instrumento</h3>
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Alumno</th>
-                      {sortedInstruments.map((instrument) => (
-                        <th key={`instrument-head-${instrument.id}`}>{instrument.name}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedStudents.map((student) => (
-                      <tr key={student.id}>
-                        <td>
+              <div className="exercise-editor">
+                <h4>Editar ejercicios por alumno/instrumento</h4>
+                <form
+                  className="exercise-form"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    onSaveSelectedExercises()
+                  }}
+                >
+                  <label className="exercise-field">
+                    Alumno
+                    <select
+                      value={exerciseStudentId}
+                      onChange={(e) => setExerciseStudentId(e.target.value)}
+                      disabled={busy || !isAuthenticated || sortedStudents.length === 0}
+                    >
+                      {sortedStudents.map((student) => (
+                        <option key={`exercise-student-${student.id}`} value={student.id}>
                           {student.studentCode} - {student.fullName}
-                        </td>
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="exercise-field">
+                    Instrumento
+                    <select
+                      value={exerciseInstrumentId}
+                      onChange={(e) => setExerciseInstrumentId(e.target.value)}
+                      disabled={busy || !isAuthenticated || sortedInstruments.length === 0}
+                    >
+                      {sortedInstruments.map((instrument) => (
+                        <option key={`exercise-instrument-${instrument.id}`} value={instrument.id}>
+                          {instrument.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="submit"
+                    className="exercise-submit"
+                    disabled={busy || !isAuthenticated || !exerciseStudentId || !exerciseInstrumentId}
+                  >
+                    Guardar ejercicios
+                  </button>
+                </form>
+
+                {exerciseStudentId && exerciseInstrumentId && (
+                  <p className="exercise-preview">
+                    Nota media (guardada -&gt; previa):{' '}
+                    <strong>
+                      {formatNumber(selectedPersistedAverage)} -&gt; {formatNumber(selectedExercisePreview)}
+                    </strong>
+                  </p>
+                )}
+
+                {exerciseStudentId && exerciseInstrumentId && (
+                  <div className="table-scroll">
+                    <table className="exercise-table">
+                      <thead>
+                        <tr>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((idx) => (
+                            <th key={`exercise-head-${idx}`}>Ej{idx}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((idx) => (
+                            <td key={`exercise-cell-${idx}`}>
+                              <input
+                                type="number"
+                                min="0"
+                                max="10"
+                                step="0.01"
+                                value={getExerciseInputValue(exerciseStudentId, exerciseInstrumentId, idx)}
+                                onChange={(e) =>
+                                  onExerciseInputChange(exerciseStudentId, exerciseInstrumentId, idx, e.target.value)
+                                }
+                                disabled={busy || !isAuthenticated}
+                              />
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="report-wrap">
+                <h4>Vista de nota media por actividad (solo lectura)</h4>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Alumno</th>
                         {sortedInstruments.map((instrument) => (
-                          <td key={`${student.id}-${instrument.id}`}>
-                            {formatNumber(gradeByStudentInstrument.get(`${student.id}-${instrument.id}`))}
-                          </td>
+                          <th key={`instrument-head-${instrument.id}`}>{instrument.name}</th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {sortedStudents.map((student) => (
+                        <tr key={student.id}>
+                          <td>
+                            {student.studentCode} - {student.fullName}
+                          </td>
+                          {sortedInstruments.map((instrument) => (
+                            <td key={`${student.id}-${instrument.id}`}>
+                              {(() => {
+                                const pairKey = `${student.id}-${instrument.id}`
+                                const persisted = toNumber(gradeByStudentInstrument.get(pairKey))
+                                const preview = getPreviewAverageByExercises(student.id, instrument.id)
+                                const hasLiveEdit = editedExercisePairs.has(pairKey)
+                                if (hasLiveEdit && preview !== null) {
+                                  return `${formatNumber(persisted)} -> ${formatNumber(preview)}`
+                                }
+                                return formatNumber(persisted)
+                              })()}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -440,6 +738,7 @@ function PreviewView({
               )}
             </div>
           )}
+
         </>
       )}
     </section>

@@ -104,7 +104,10 @@ public class ExcelTemplateMapperService {
             Map<Integer, String> raCodeByColumn = parseRAColumnHeaders(datos, 7, evaluator, formatter);
             List<ActivityRow> activityRows = parseActivityRows(datos, raCodeByColumn, evaluator, formatter);
             Map<String, Integer> evalByUtKey = buildEvaluationByUT(activityRows);
-            Map<String, List<ExcelImportRequest.InstrumentItem>> instrumentsByUtKey = buildInstrumentsByUT(activityRows);
+            Map<String, List<ExcelImportRequest.ExerciseWeightItem>> exerciseWeightsByActivityName =
+                    parseExerciseWeightsByActivityName(actividades, evaluator, formatter);
+            Map<String, List<ExcelImportRequest.InstrumentItem>> instrumentsByUtKey =
+                    buildInstrumentsByUT(activityRows, exerciseWeightsByActivityName);
 
             List<ExcelImportRequest.UTItem> uts = parseUTs(datos, raCodeByColumn, evalByUtKey, instrumentsByUtKey, evaluator, formatter);
             if (uts.isEmpty()) {
@@ -279,7 +282,48 @@ public class ExcelTemplateMapperService {
         return evalByUtKey;
     }
 
-    private Map<String, List<ExcelImportRequest.InstrumentItem>> buildInstrumentsByUT(List<ActivityRow> rows) {
+    private Map<String, List<ExcelImportRequest.ExerciseWeightItem>> parseExerciseWeightsByActivityName(
+            Sheet actividades,
+            FormulaEvaluator evaluator,
+            DataFormatter formatter
+    ) {
+        Map<String, List<ExcelImportRequest.ExerciseWeightItem>> byActivityName = new LinkedHashMap<>();
+        if (actividades == null) {
+            return byActivityName;
+        }
+
+        for (int i = 0; i < ACT_BLOCK_COUNT; i++) {
+            int startCol = ACT_BLOCK_START_COL + (i * ACT_BLOCK_WIDTH);
+            String activityName = trimOrNull(getString(actividades, 0, startCol, evaluator, formatter));
+            if (isBlank(activityName)) {
+                continue;
+            }
+
+            List<ExcelImportRequest.ExerciseWeightItem> weights = new ArrayList<>();
+            for (int offset = 1; offset <= 10; offset++) {
+                int col = startCol + offset;
+                BigDecimal value = getDecimal(actividades, ACT_ROW_WEIGHTS, col, evaluator, formatter);
+                if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
+                }
+                ExcelImportRequest.ExerciseWeightItem item = new ExcelImportRequest.ExerciseWeightItem();
+                item.setExerciseIndex(offset);
+                item.setWeightPercent(scale2(value));
+                weights.add(item);
+            }
+
+            if (!weights.isEmpty()) {
+                byActivityName.put(normalize(activityName), weights);
+            }
+        }
+
+        return byActivityName;
+    }
+
+    private Map<String, List<ExcelImportRequest.InstrumentItem>> buildInstrumentsByUT(
+            List<ActivityRow> rows,
+            Map<String, List<ExcelImportRequest.ExerciseWeightItem>> exerciseWeightsByActivityName
+    ) {
         Map<String, List<ActivityRow>> rowsByUt = new LinkedHashMap<>();
         for (ActivityRow row : rows) {
             rowsByUt.computeIfAbsent(normalize(row.utKey), ignored -> new ArrayList<>()).add(row);
@@ -319,6 +363,9 @@ public class ExcelTemplateMapperService {
                 instrumentItem.setName(row.activityName);
                 instrumentItem.setWeightPercent(scale2(normalizedWeight));
                 instrumentItem.setRaCodes(row.raCodes);
+                List<ExcelImportRequest.ExerciseWeightItem> exerciseWeights =
+                        exerciseWeightsByActivityName.getOrDefault(normalize(row.activityName), List.of());
+                instrumentItem.setExerciseWeights(exerciseWeights);
                 instruments.add(instrumentItem);
 
                 assigned = assigned.add(instrumentItem.getWeightPercent());
@@ -472,6 +519,8 @@ public class ExcelTemplateMapperService {
 
                 boolean hasMainGradeInput = hasUserEnteredValue(actividades, row, startCol, formatter);
                 boolean hasExercisesInput = hasUserEnteredValueInRange(actividades, row, startCol + 1, startCol + 10, formatter);
+                List<ExcelImportRequest.ExerciseGradeItem> exerciseGradeItems =
+                        parseExerciseGradeInputs(actividades, row, startCol + 1, evaluator, formatter);
 
                 BigDecimal grade = hasMainGradeInput
                         ? getDecimal(actividades, row, startCol, evaluator, formatter)
@@ -486,6 +535,9 @@ public class ExcelTemplateMapperService {
                 ExcelImportRequest.GradeItem item = new ExcelImportRequest.GradeItem();
                 item.setInstrumentKey(instrumentKey);
                 item.setGradeValue(scale2(grade));
+                if (!exerciseGradeItems.isEmpty()) {
+                    item.setExerciseGrades(exerciseGradeItems);
+                }
                 student.getGrades().add(item);
             }
         }
@@ -560,6 +612,9 @@ public class ExcelTemplateMapperService {
                 }
 
                 boolean allRAsPassed = failedRaw == null || failedRaw.compareTo(BigDecimal.ZERO) <= 0;
+                int failedRasCount = failedRaw == null
+                        ? 0
+                        : Math.max(0, failedRaw.setScale(0, RoundingMode.HALF_UP).intValue());
                 int suggestedBulletinGrade = suggestedRaw != null
                         ? suggestedRaw.setScale(0, RoundingMode.HALF_UP).intValue()
                         : calculateSuggestedBulletinGradeFromNumeric(numericGrade, allRAsPassed);
@@ -570,6 +625,7 @@ public class ExcelTemplateMapperService {
                 item.setNumericGrade(scale4(numericGrade));
                 item.setSuggestedBulletinGrade(suggestedBulletinGrade);
                 item.setAllRAsPassed(allRAsPassed);
+                item.setFailedRasCount(failedRasCount);
 
                 String key = normalize(studentCode) + "#" + evaluationPeriod;
                 unique.put(key, item);
@@ -622,6 +678,33 @@ public class ExcelTemplateMapperService {
             }
         }
         return false;
+    }
+
+    private List<ExcelImportRequest.ExerciseGradeItem> parseExerciseGradeInputs(Sheet actividades,
+                                                                                 int studentRow,
+                                                                                 int exerciseStartCol,
+                                                                                 FormulaEvaluator evaluator,
+                                                                                 DataFormatter formatter) {
+        List<ExcelImportRequest.ExerciseGradeItem> result = new ArrayList<>();
+
+        for (int offset = 0; offset < 10; offset++) {
+            int col = exerciseStartCol + offset;
+            if (!hasUserEnteredValue(actividades, studentRow, col, formatter)) {
+                continue;
+            }
+
+            BigDecimal grade = getDecimal(actividades, studentRow, col, evaluator, formatter);
+            if (grade == null) {
+                continue;
+            }
+
+            ExcelImportRequest.ExerciseGradeItem item = new ExcelImportRequest.ExerciseGradeItem();
+            item.setExerciseIndex(offset + 1);
+            item.setGradeValue(scale2(grade));
+            result.add(item);
+        }
+
+        return result;
     }
 
     private BigDecimal computeGradeFromExercises(Sheet actividades,

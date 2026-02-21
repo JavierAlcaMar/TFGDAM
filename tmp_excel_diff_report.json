@@ -1,0 +1,1119 @@
+{
+  "source": "C:\\Users\\ignac\\Downloads\\source_template_rellenada.xlsx",
+  "export": "C:\\Users\\ignac\\Downloads\\module-2-export.xlsx",
+  "global_counts": {
+    "missing_in_export": 6813,
+    "formula_replaced_by_value": 360,
+    "formula_changed": 13500,
+    "value_changed": 50
+  },
+  "sheets": {
+    "Actividades": {
+      "sheet_missing_in_source": false,
+      "sheet_missing_in_export": false,
+      "counts": {
+        "missing_in_export": 6156,
+        "formula_replaced_by_value": 240,
+        "formula_changed": 13500
+      },
+      "samples": {
+        "missing_in_export": [
+          {
+            "cell": "G1",
+            "source": "prueba1",
+            "export": null
+          },
+          {
+            "cell": "R1",
+            "source": "prueba2",
+            "export": null
+          },
+          {
+            "cell": "AC1",
+            "source": "prueba3",
+            "export": null
+          },
+          {
+            "cell": "AN1",
+            "source": "prueba4",
+            "export": null
+          },
+          {
+            "cell": "AY1",
+            "source": "prueba5",
+            "export": null
+          },
+          {
+            "cell": "BJ1",
+            "source": "prueba6",
+            "export": null
+          },
+          {
+            "cell": "BU1",
+            "source": "prueba7",
+            "export": null
+          },
+          {
+            "cell": "CB1",
+            "source": "Actividad8",
+            "export": null
+          },
+          {
+            "cell": "CM1",
+            "source": "Actividad9",
+            "export": null
+          },
+          {
+            "cell": "CX1",
+            "source": "Actividad10",
+            "export": null
+          },
+          {
+            "cell": "DI1",
+            "source": "Actividad11",
+            "export": null
+          },
+          {
+            "cell": "DT1",
+            "source": "Actividad12",
+            "export": null
+          },
+          {
+            "cell": "EE1",
+            "source": "Actividad13",
+            "export": null
+          },
+          {
+            "cell": "EP1",
+            "source": "Actividad14",
+            "export": null
+          },
+          {
+            "cell": "FA1",
+            "source": "Actividad15",
+            "export": null
+          },
+          {
+            "cell": "FL1",
+            "source": "Actividad16",
+            "export": null
+          },
+          {
+            "cell": "FW1",
+            "source": "Actividad17",
+            "export": null
+          },
+          {
+            "cell": "GH1",
+            "source": "Actividad18",
+            "export": null
+          },
+          {
+            "cell": "GS1",
+            "source": "Actividad19",
+            "export": null
+          },
+          {
+            "cell": "HD1",
+            "source": "Actividad20",
+            "export": null
+          },
+          {
+            "cell": "HO1",
+            "source": "Actividad21",
+            "export": null
+          },
+          {
+            "cell": "HZ1",
+            "source": "Actividad22",
+            "export": null
+          },
+          {
+            "cell": "IK1",
+            "source": "Actividad23",
+            "export": null
+          },
+          {
+            "cell": "IV1",
+            "source": "Actividad24",
+            "export": null
+          },
+          {
+            "cell": "JG1",
+            "source": "Actividad25",
+            "export": null
+          },
+          {
+            "cell": "JR1",
+            "source": "Actividad26",
+            "export": null
+          },
+          {
+            "cell": "KC1",
+            "source": "Actividad27",
+            "export": null
+          },
+          {
+            "cell": "KN1",
+            "source": "Actividad28",
+            "export": null
+          },
+          {
+            "cell": "KY1",
+            "source": "Actividad29",
+            "export": null
+          },
+          {
+            "cell": "LJ1",
+            "source": "Actividad30",
+            "export": null
+          }
+        ],
+        "formula_replaced_by_value": [
+          {
+            "cell": "B6",
+            "source": "='Datos Iniciales'!T9",
+            "export": "Alumno1"
+          },
+          {
+            "cell": "C6",
+            "source": "=SUMPRODUCT(D$4:M$4,D6:M6)",
+            "export": 6.9
+          },
+          {
+            "cell": "N6",
+            "source": "=SUMPRODUCT(O$4:X$4,O6:X6)",
+            "export": 7
+          },
+          {
+            "cell": "Y6",
+            "source": "=SUMPRODUCT(Z$4:AI$4,Z6:AI6)",
+            "export": 7
+          },
+          {
+            "cell": "AJ6",
+            "source": "=SUMPRODUCT(AK$4:AT$4,AK6:AT6)",
+            "export": 7
+          },
+          {
+            "cell": "AU6",
+            "source": "=SUMPRODUCT(AV$4:BE$4,AV6:BE6)",
+            "export": 6.2
+          },
+          {
+            "cell": "BF6",
+            "source": "=SUMPRODUCT(BG$4:BP$4,BG6:BP6)",
+            "export": 6.7
+          },
+          {
+            "cell": "BQ6",
+            "source": "=SUMPRODUCT(BR$4:CA$4,BR6:CA6)",
+            "export": 4.5
+          },
+          {
+            "cell": "B7",
+            "source": "='Datos Iniciales'!T10",
+            "export": "Alumno2"
+          },
+          {
+            "cell": "C7",
+            "source": "=SUMPRODUCT(D$4:M$4,D7:M7)",
+            "export": 5
+          },
+          {
+            "cell": "N7",
+            "source": "=SUMPRODUCT(O$4:X$4,O7:X7)",
+            "export": 5
+          },
+          {
+            "cell": "Y7",
+            "source": "=SUMPRODUCT(Z$4:AI$4,Z7:AI7)",
+            "export": 5
+          },
+          {
+            "cell": "AJ7",
+            "source": "=SUMPRODUCT(AK$4:AT$4,AK7:AT7)",
+            "export": 5
+          },
+          {
+            "cell": "AU7",
+            "source": "=SUMPRODUCT(AV$4:BE$4,AV7:BE7)",
+            "export": 5
+          },
+          {
+            "cell": "BF7",
+            "source": "=SUMPRODUCT(BG$4:BP$4,BG7:BP7)",
+            "export": 5
+          },
+          {
+            "cell": "BQ7",
+            "source": "=SUMPRODUCT(BR$4:CA$4,BR7:CA7)",
+            "export": 3.6
+          },
+          {
+            "cell": "B8",
+            "source": "='Datos Iniciales'!T11",
+            "export": "Alumno3"
+          },
+          {
+            "cell": "C8",
+            "source": "=SUMPRODUCT(D$4:M$4,D8:M8)",
+            "export": 5.3
+          },
+          {
+            "cell": "N8",
+            "source": "=SUMPRODUCT(O$4:X$4,O8:X8)",
+            "export": 4.6
+          },
+          {
+            "cell": "Y8",
+            "source": "=SUMPRODUCT(Z$4:AI$4,Z8:AI8)",
+            "export": 4.6
+          },
+          {
+            "cell": "AJ8",
+            "source": "=SUMPRODUCT(AK$4:AT$4,AK8:AT8)",
+            "export": 4.6
+          },
+          {
+            "cell": "AU8",
+            "source": "=SUMPRODUCT(AV$4:BE$4,AV8:BE8)",
+            "export": 5
+          },
+          {
+            "cell": "BF8",
+            "source": "=SUMPRODUCT(BG$4:BP$4,BG8:BP8)",
+            "export": 5.1
+          },
+          {
+            "cell": "BQ8",
+            "source": "=SUMPRODUCT(BR$4:CA$4,BR8:CA8)",
+            "export": 9.5
+          },
+          {
+            "cell": "B9",
+            "source": "='Datos Iniciales'!T12",
+            "export": "Alumno4"
+          },
+          {
+            "cell": "C9",
+            "source": "=SUMPRODUCT(D$4:M$4,D9:M9)",
+            "export": 4.1
+          },
+          {
+            "cell": "N9",
+            "source": "=SUMPRODUCT(O$4:X$4,O9:X9)",
+            "export": 5
+          },
+          {
+            "cell": "Y9",
+            "source": "=SUMPRODUCT(Z$4:AI$4,Z9:AI9)",
+            "export": 5
+          },
+          {
+            "cell": "AJ9",
+            "source": "=SUMPRODUCT(AK$4:AT$4,AK9:AT9)",
+            "export": 5
+          },
+          {
+            "cell": "AU9",
+            "source": "=SUMPRODUCT(AV$4:BE$4,AV9:BE9)",
+            "export": 4.6
+          }
+        ],
+        "formula_changed": [
+          {
+            "cell": "D160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,D$158,FALSE())*D62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,D$158,FALSE)*D62"
+          },
+          {
+            "cell": "E160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,E$158,FALSE())*E62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,E$158,FALSE)*E62"
+          },
+          {
+            "cell": "F160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,F$158,FALSE())*F62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,F$158,FALSE)*F62"
+          },
+          {
+            "cell": "G160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,G$158,FALSE())*G62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,G$158,FALSE)*G62"
+          },
+          {
+            "cell": "H160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,H$158,FALSE())*H62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,H$158,FALSE)*H62"
+          },
+          {
+            "cell": "I160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,I$158,FALSE())*I62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,I$158,FALSE)*I62"
+          },
+          {
+            "cell": "J160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,J$158,FALSE())*J62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,J$158,FALSE)*J62"
+          },
+          {
+            "cell": "K160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,K$158,FALSE())*K62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,K$158,FALSE)*K62"
+          },
+          {
+            "cell": "L160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,L$158,FALSE())*L62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,L$158,FALSE)*L62"
+          },
+          {
+            "cell": "M160",
+            "source": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,M$158,FALSE())*M62",
+            "export": "=VLOOKUP($C$1,'Datos Iniciales'!$E$34:$O$64,M$158,FALSE)*M62"
+          },
+          {
+            "cell": "O160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,O$158,FALSE())*O62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,O$158,FALSE)*O62"
+          },
+          {
+            "cell": "P160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,P$158,FALSE())*P62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,P$158,FALSE)*P62"
+          },
+          {
+            "cell": "Q160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,Q$158,FALSE())*Q62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,Q$158,FALSE)*Q62"
+          },
+          {
+            "cell": "R160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,R$158,FALSE())*R62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,R$158,FALSE)*R62"
+          },
+          {
+            "cell": "S160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,S$158,FALSE())*S62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,S$158,FALSE)*S62"
+          },
+          {
+            "cell": "T160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,T$158,FALSE())*T62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,T$158,FALSE)*T62"
+          },
+          {
+            "cell": "U160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,U$158,FALSE())*U62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,U$158,FALSE)*U62"
+          },
+          {
+            "cell": "V160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,V$158,FALSE())*V62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,V$158,FALSE)*V62"
+          },
+          {
+            "cell": "W160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,W$158,FALSE())*W62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,W$158,FALSE)*W62"
+          },
+          {
+            "cell": "X160",
+            "source": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,X$158,FALSE())*X62",
+            "export": "=VLOOKUP($N$1,'Datos Iniciales'!$E$34:$O$64,X$158,FALSE)*X62"
+          },
+          {
+            "cell": "Z160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,Z$158,FALSE())*Z62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,Z$158,FALSE)*Z62"
+          },
+          {
+            "cell": "AA160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AA$158,FALSE())*AA62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AA$158,FALSE)*AA62"
+          },
+          {
+            "cell": "AB160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AB$158,FALSE())*AB62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AB$158,FALSE)*AB62"
+          },
+          {
+            "cell": "AC160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AC$158,FALSE())*AC62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AC$158,FALSE)*AC62"
+          },
+          {
+            "cell": "AD160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AD$158,FALSE())*AD62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AD$158,FALSE)*AD62"
+          },
+          {
+            "cell": "AE160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AE$158,FALSE())*AE62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AE$158,FALSE)*AE62"
+          },
+          {
+            "cell": "AF160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AF$158,FALSE())*AF62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AF$158,FALSE)*AF62"
+          },
+          {
+            "cell": "AG160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AG$158,FALSE())*AG62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AG$158,FALSE)*AG62"
+          },
+          {
+            "cell": "AH160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AH$158,FALSE())*AH62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AH$158,FALSE)*AH62"
+          },
+          {
+            "cell": "AI160",
+            "source": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AI$158,FALSE())*AI62",
+            "export": "=VLOOKUP($Y$1,'Datos Iniciales'!$E$34:$O$64,AI$158,FALSE)*AI62"
+          }
+        ]
+      },
+      "max_row_source": 204,
+      "max_row_export": 204,
+      "max_col_source": 345,
+      "max_col_export": 345
+    },
+    "Datos Iniciales": {
+      "sheet_missing_in_source": false,
+      "sheet_missing_in_export": false,
+      "counts": {
+        "missing_in_export": 549,
+        "value_changed": 50
+      },
+      "samples": {
+        "missing_in_export": [
+          {
+            "cell": "B1",
+            "source": "TÉCNICO EN EMERGENCIAS SANITARIAS",
+            "export": null
+          },
+          {
+            "cell": "B2",
+            "source": "GM",
+            "export": null
+          },
+          {
+            "cell": "B4",
+            "source": "0054",
+            "export": null
+          },
+          {
+            "cell": "H9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "I9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "J9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "K9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "L9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "M9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "N9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "O9",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "I10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "J10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "K10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "L10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "M10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "N10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "O10",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "I11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "J11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "K11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "L11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "M11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "N11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "O11",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "J12",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "K12",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "L12",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "M12",
+            "source": 0,
+            "export": null
+          },
+          {
+            "cell": "N12",
+            "source": 0,
+            "export": null
+          }
+        ],
+        "value_changed": [
+          {
+            "cell": "S9",
+            "source": 1,
+            "export": "1"
+          },
+          {
+            "cell": "S10",
+            "source": 2,
+            "export": "2"
+          },
+          {
+            "cell": "S11",
+            "source": 3,
+            "export": "3"
+          },
+          {
+            "cell": "S12",
+            "source": 4,
+            "export": "4"
+          },
+          {
+            "cell": "S13",
+            "source": 5,
+            "export": "5"
+          },
+          {
+            "cell": "S14",
+            "source": 6,
+            "export": "6"
+          },
+          {
+            "cell": "S15",
+            "source": 7,
+            "export": "7"
+          },
+          {
+            "cell": "S16",
+            "source": 8,
+            "export": "8"
+          },
+          {
+            "cell": "S17",
+            "source": 9,
+            "export": "9"
+          },
+          {
+            "cell": "S18",
+            "source": 10,
+            "export": "10"
+          },
+          {
+            "cell": "S19",
+            "source": 11,
+            "export": "11"
+          },
+          {
+            "cell": "S20",
+            "source": 12,
+            "export": "12"
+          },
+          {
+            "cell": "S21",
+            "source": 13,
+            "export": "13"
+          },
+          {
+            "cell": "S22",
+            "source": 14,
+            "export": "14"
+          },
+          {
+            "cell": "S23",
+            "source": 15,
+            "export": "15"
+          },
+          {
+            "cell": "S24",
+            "source": 16,
+            "export": "16"
+          },
+          {
+            "cell": "S25",
+            "source": 17,
+            "export": "17"
+          },
+          {
+            "cell": "S26",
+            "source": 18,
+            "export": "18"
+          },
+          {
+            "cell": "S27",
+            "source": 19,
+            "export": "19"
+          },
+          {
+            "cell": "S28",
+            "source": 20,
+            "export": "20"
+          },
+          {
+            "cell": "S29",
+            "source": 21,
+            "export": "21"
+          },
+          {
+            "cell": "S30",
+            "source": 22,
+            "export": "22"
+          },
+          {
+            "cell": "S31",
+            "source": 23,
+            "export": "23"
+          },
+          {
+            "cell": "S32",
+            "source": 24,
+            "export": "24"
+          },
+          {
+            "cell": "S33",
+            "source": 25,
+            "export": "25"
+          },
+          {
+            "cell": "S34",
+            "source": 26,
+            "export": "26"
+          },
+          {
+            "cell": "F35",
+            "source": 0.25,
+            "export": 0.3846
+          },
+          {
+            "cell": "S35",
+            "source": 27,
+            "export": "27"
+          },
+          {
+            "cell": "F36",
+            "source": 0.2,
+            "export": 0.3077
+          },
+          {
+            "cell": "G36",
+            "source": 0.2,
+            "export": 0.3077
+          }
+        ]
+      },
+      "max_row_source": 92,
+      "max_row_export": 92,
+      "max_col_source": 31,
+      "max_col_export": 31
+    },
+    "Evaluaciones": {
+      "sheet_missing_in_source": false,
+      "sheet_missing_in_export": false,
+      "counts": {
+        "formula_replaced_by_value": 120,
+        "missing_in_export": 108
+      },
+      "samples": {
+        "formula_replaced_by_value": [
+          {
+            "cell": "B5",
+            "source": "='Datos Iniciales'!T9",
+            "export": "Alumno1"
+          },
+          {
+            "cell": "R5",
+            "source": "=SUMPRODUCT(U5:AD5,U$51:AD$51)",
+            "export": 6.56
+          },
+          {
+            "cell": "T5",
+            "source": "=IF(R5<1,1,IF(AND(R5<5,AE5>0),TRUNC(R5,0),IF(AND(R5>5,AE5>0),4,ROUND(R5,0))))",
+            "export": 7
+          },
+          {
+            "cell": "AE5",
+            "source": "=COUNTIF(U5:AD5,\"<5\")",
+            "export": 0
+          },
+          {
+            "cell": "B6",
+            "source": "='Datos Iniciales'!T10",
+            "export": "Alumno2"
+          },
+          {
+            "cell": "R6",
+            "source": "=SUMPRODUCT(U6:AD6,U$51:AD$51)",
+            "export": 4.87
+          },
+          {
+            "cell": "T6",
+            "source": "=IF(R6<1,1,IF(AND(R6<5,AE6>0),TRUNC(R6,0),IF(AND(R6>5,AE6>0),4,ROUND(R6,0))))",
+            "export": 4
+          },
+          {
+            "cell": "AE6",
+            "source": "=COUNTIF(U6:AD6,\"<5\")",
+            "export": 1
+          },
+          {
+            "cell": "B7",
+            "source": "='Datos Iniciales'!T11",
+            "export": "Alumno3"
+          },
+          {
+            "cell": "R7",
+            "source": "=SUMPRODUCT(U7:AD7,U$51:AD$51)",
+            "export": 5.24
+          },
+          {
+            "cell": "T7",
+            "source": "=IF(R7<1,1,IF(AND(R7<5,AE7>0),TRUNC(R7,0),IF(AND(R7>5,AE7>0),4,ROUND(R7,0))))",
+            "export": 4
+          },
+          {
+            "cell": "AE7",
+            "source": "=COUNTIF(U7:AD7,\"<5\")",
+            "export": 1
+          },
+          {
+            "cell": "B8",
+            "source": "='Datos Iniciales'!T12",
+            "export": "Alumno4"
+          },
+          {
+            "cell": "R8",
+            "source": "=SUMPRODUCT(U8:AD8,U$51:AD$51)",
+            "export": 4.95
+          },
+          {
+            "cell": "T8",
+            "source": "=IF(R8<1,1,IF(AND(R8<5,AE8>0),TRUNC(R8,0),IF(AND(R8>5,AE8>0),4,ROUND(R8,0))))",
+            "export": 4
+          },
+          {
+            "cell": "AE8",
+            "source": "=COUNTIF(U8:AD8,\"<5\")",
+            "export": 1
+          },
+          {
+            "cell": "B9",
+            "source": "='Datos Iniciales'!T13",
+            "export": "Alumno5"
+          },
+          {
+            "cell": "R9",
+            "source": "=SUMPRODUCT(U9:AD9,U$51:AD$51)",
+            "export": 7.22
+          },
+          {
+            "cell": "T9",
+            "source": "=IF(R9<1,1,IF(AND(R9<5,AE9>0),TRUNC(R9,0),IF(AND(R9>5,AE9>0),4,ROUND(R9,0))))",
+            "export": 7
+          },
+          {
+            "cell": "AE9",
+            "source": "=COUNTIF(U9:AD9,\"<5\")",
+            "export": 0
+          },
+          {
+            "cell": "B10",
+            "source": "='Datos Iniciales'!T14",
+            "export": "Alumno6"
+          },
+          {
+            "cell": "R10",
+            "source": "=SUMPRODUCT(U10:AD10,U$51:AD$51)",
+            "export": 9.45
+          },
+          {
+            "cell": "T10",
+            "source": "=IF(R10<1,1,IF(AND(R10<5,AE10>0),TRUNC(R10,0),IF(AND(R10>5,AE10>0),4,ROUND(R10,0))))",
+            "export": 9
+          },
+          {
+            "cell": "AE10",
+            "source": "=COUNTIF(U10:AD10,\"<5\")",
+            "export": 0
+          },
+          {
+            "cell": "B11",
+            "source": "='Datos Iniciales'!T15",
+            "export": "Alumno7"
+          },
+          {
+            "cell": "R11",
+            "source": "=SUMPRODUCT(U11:AD11,U$51:AD$51)",
+            "export": 8.65
+          },
+          {
+            "cell": "T11",
+            "source": "=IF(R11<1,1,IF(AND(R11<5,AE11>0),TRUNC(R11,0),IF(AND(R11>5,AE11>0),4,ROUND(R11,0))))",
+            "export": 9
+          },
+          {
+            "cell": "AE11",
+            "source": "=COUNTIF(U11:AD11,\"<5\")",
+            "export": 0
+          },
+          {
+            "cell": "B12",
+            "source": "='Datos Iniciales'!T16",
+            "export": "Alumno8"
+          },
+          {
+            "cell": "R12",
+            "source": "=SUMPRODUCT(U12:AD12,U$51:AD$51)",
+            "export": 6.5
+          }
+        ],
+        "missing_in_export": [
+          {
+            "cell": "B35",
+            "source": "='Datos Iniciales'!T39",
+            "export": null
+          },
+          {
+            "cell": "AE35",
+            "source": "=COUNTIF(U35:AD35,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B36",
+            "source": "='Datos Iniciales'!T40",
+            "export": null
+          },
+          {
+            "cell": "AE36",
+            "source": "=COUNTIF(U36:AD36,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B37",
+            "source": "='Datos Iniciales'!T41",
+            "export": null
+          },
+          {
+            "cell": "AE37",
+            "source": "=COUNTIF(U37:AD37,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B38",
+            "source": "='Datos Iniciales'!T42",
+            "export": null
+          },
+          {
+            "cell": "AE38",
+            "source": "=COUNTIF(U38:AD38,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B39",
+            "source": "='Datos Iniciales'!T43",
+            "export": null
+          },
+          {
+            "cell": "AE39",
+            "source": "=COUNTIF(U39:AD39,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B40",
+            "source": "='Datos Iniciales'!T44",
+            "export": null
+          },
+          {
+            "cell": "AE40",
+            "source": "=COUNTIF(U40:AD40,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B41",
+            "source": "='Datos Iniciales'!T45",
+            "export": null
+          },
+          {
+            "cell": "AE41",
+            "source": "=COUNTIF(U41:AD41,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B42",
+            "source": "='Datos Iniciales'!T46",
+            "export": null
+          },
+          {
+            "cell": "AE42",
+            "source": "=COUNTIF(U42:AD42,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B43",
+            "source": "='Datos Iniciales'!T47",
+            "export": null
+          },
+          {
+            "cell": "AE43",
+            "source": "=COUNTIF(U43:AD43,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B44",
+            "source": "='Datos Iniciales'!T48",
+            "export": null
+          },
+          {
+            "cell": "AE44",
+            "source": "=COUNTIF(U44:AD44,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B45",
+            "source": "='Datos Iniciales'!T49",
+            "export": null
+          },
+          {
+            "cell": "AE45",
+            "source": "=COUNTIF(U45:AD45,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B46",
+            "source": "='Datos Iniciales'!T50",
+            "export": null
+          },
+          {
+            "cell": "AE46",
+            "source": "=COUNTIF(U46:AD46,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B47",
+            "source": "='Datos Iniciales'!T51",
+            "export": null
+          },
+          {
+            "cell": "AE47",
+            "source": "=COUNTIF(U47:AD47,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B48",
+            "source": "='Datos Iniciales'!T52",
+            "export": null
+          },
+          {
+            "cell": "AE48",
+            "source": "=COUNTIF(U48:AD48,\"<5\")",
+            "export": null
+          },
+          {
+            "cell": "B49",
+            "source": "='Datos Iniciales'!T53",
+            "export": null
+          },
+          {
+            "cell": "AE49",
+            "source": "=COUNTIF(U49:AD49,\"<5\")",
+            "export": null
+          }
+        ]
+      },
+      "max_row_source": 137,
+      "max_row_export": 137,
+      "max_col_source": 62,
+      "max_col_export": 62
+    }
+  }
+}

@@ -20,9 +20,12 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(
-        name = "student_evaluation_overrides",
+        name = "instrument_exercise_weights",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_eval_override_student_period", columnNames = {"student_id", "evaluation_period"})
+                @UniqueConstraint(
+                        name = "uk_instrument_exercise_weight",
+                        columnNames = {"instrument_id", "exercise_index"}
+                )
         }
 )
 @Getter
@@ -30,28 +33,20 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class StudentEvaluationOverride {
+public class InstrumentExerciseWeight {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
+    @JoinColumn(name = "instrument_id", nullable = false)
+    private Instrument instrument;
 
-    @Column(name = "evaluation_period", nullable = false)
-    private Integer evaluationPeriod;
+    @Column(name = "exercise_index", nullable = false)
+    private Integer exerciseIndex;
 
-    @Column(name = "numeric_grade", nullable = false, precision = 6, scale = 4)
-    private BigDecimal numericGrade;
-
-    @Column(name = "suggested_bulletin_grade", nullable = false)
-    private Integer suggestedBulletinGrade;
-
-    @Column(name = "all_ras_passed", nullable = false)
-    private Boolean allRAsPassed;
-
-    @Column(name = "failed_ras_count", nullable = false)
-    private Integer failedRasCount;
+    @Column(name = "weight_percent", nullable = false, precision = 5, scale = 2)
+    private BigDecimal weightPercent;
 }
+

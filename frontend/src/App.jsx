@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { apiRequest, getApiBaseUrl, normalizeError } from './lib/api'
+import { apiDownload, apiRequest, getApiBaseUrl, normalizeError } from './lib/api'
 import ImportView from './views/ImportView'
 import LoginView from './views/LoginView'
 import ModulesView from './views/ModulesView'
@@ -197,8 +197,9 @@ function App() {
     }
 
     const extension = getFileExtension(importForm.file.name)
+    const normalizedModuleId = String(importForm.moduleId || '').trim()
 
-    if (extension === '.pdf' && !importForm.moduleId) {
+    if (extension === '.pdf' && !normalizedModuleId) {
       pushLog('Para PDF debes indicar el modulo (ID).')
       return
     }
@@ -208,11 +209,16 @@ function App() {
       return
     }
 
+    if (normalizedModuleId && !/^\d+$/.test(normalizedModuleId)) {
+      pushLog('El modulo (ID) debe ser numerico.')
+      return
+    }
+
     setBusy(true)
     try {
       if (extension === '.pdf') {
         const formData = new FormData()
-        formData.append('moduleId', importForm.moduleId)
+        formData.append('moduleId', normalizedModuleId)
         formData.append('file', importForm.file)
 
         const createdJob = await apiRequest('/imports/ra', {
@@ -228,6 +234,9 @@ function App() {
       }
 
       const excelFormData = new FormData()
+      if (normalizedModuleId) {
+        excelFormData.append('moduleId', normalizedModuleId)
+      }
       excelFormData.append('file', importForm.file)
 
       const imported = await apiRequest('/imports/excel-file', {
@@ -295,6 +304,154 @@ function App() {
       setPreviewEvaluationReports([])
       setPreviewFinalReport(null)
       pushLog(normalizeError(error, 'No se pudo cargar la vista previa del modulo.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onDownloadExcel = async () => {
+    if (!token) return
+
+    const moduleId = String(selectedModuleId || '').trim()
+    if (!moduleId) {
+      pushLog('Selecciona un modulo (ID) antes de descargar el Excel.')
+      return
+    }
+
+    setBusy(true)
+    try {
+      const { blob, filename } = await apiDownload(`/modules/${moduleId}/export/excel`, { token })
+      const downloadName = filename || `module-${moduleId}-export.xlsx`
+
+      const url = window.URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = downloadName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(url)
+
+      pushLog(`Excel descargado: ${downloadName}`)
+    } catch (error) {
+      pushLog(normalizeError(error, 'No se pudo descargar el Excel del modulo.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onDownloadBaseTemplate = async () => {
+    if (!token) return
+
+    setBusy(true)
+    try {
+      const { blob, filename } = await apiDownload('/modules/export/template/base', { token })
+      const downloadName = filename || 'source_template_unprotected.xlsx'
+
+      const url = window.URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = downloadName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(url)
+
+      pushLog(`Plantilla base descargada: ${downloadName}`)
+    } catch (error) {
+      pushLog(normalizeError(error, 'No se pudo descargar la plantilla base.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onDownloadFilledTemplate = async () => {
+    if (!token) return
+
+    setBusy(true)
+    try {
+      const { blob, filename } = await apiDownload('/modules/export/template/filled', { token })
+      const downloadName = filename || 'source_template_rellenada_unprotected.xlsx'
+
+      const url = window.URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = downloadName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      window.URL.revokeObjectURL(url)
+
+      pushLog(`Plantilla rellenada descargada: ${downloadName}`)
+    } catch (error) {
+      pushLog(normalizeError(error, 'No se pudo descargar la plantilla rellenada.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onSaveGrades = async (changes) => {
+    if (!token) return false
+
+    const moduleId = String(selectedModuleId || '').trim()
+    if (!moduleId) {
+      pushLog('Selecciona un modulo (ID) antes de guardar notas.')
+      return false
+    }
+    if (!Array.isArray(changes) || changes.length === 0) {
+      pushLog('No hay notas modificadas para guardar.')
+      return false
+    }
+
+    setBusy(true)
+    try {
+      await apiRequest('/grades', {
+        method: 'POST',
+        token,
+        body: {
+          grades: changes.map((item) => {
+            const payloadItem = {
+              studentId: item.studentId,
+              instrumentId: item.instrumentId,
+            }
+            if (item.gradeValue !== undefined && item.gradeValue !== null) {
+              payloadItem.gradeValue = item.gradeValue
+            }
+            if (Array.isArray(item.exerciseGrades)) {
+              payloadItem.exerciseGrades = item.exerciseGrades.map((exercise) => ({
+                exerciseIndex: exercise.exerciseIndex,
+                gradeValue: exercise.gradeValue,
+              }))
+            }
+            return payloadItem
+          }),
+        },
+      })
+
+      const preview = await apiRequest(`/modules/${moduleId}/preview`, { token })
+      setPreviewData(preview)
+
+      const evaluationPeriods = [
+        ...new Set((preview.uts || []).map((ut) => Number(ut.evaluationPeriod)).filter(Number.isFinite)),
+      ].sort((a, b) => a - b)
+
+      try {
+        const evaluationReports = await Promise.all(
+          evaluationPeriods.map((period) => apiRequest(`/modules/${moduleId}/reports/evaluation/${period}`, { token })),
+        )
+        const finalReport = await apiRequest(`/modules/${moduleId}/reports/final`, { token })
+        setPreviewEvaluationReports(evaluationReports)
+        setPreviewFinalReport(finalReport)
+      } catch {
+        setPreviewEvaluationReports([])
+        setPreviewFinalReport(null)
+      }
+
+      pushLog(`Notas guardadas en BD: ${changes.length}.`)
+      return true
+    } catch (error) {
+      pushLog(normalizeError(error, 'No se pudieron guardar las notas.'))
+      return false
     } finally {
       setBusy(false)
     }
@@ -434,6 +591,10 @@ function App() {
           evaluationReports={previewEvaluationReports}
           finalReport={previewFinalReport}
           onLoadPreview={onLoadPreview}
+          onDownloadExcel={onDownloadExcel}
+          onDownloadBaseTemplate={onDownloadBaseTemplate}
+          onDownloadFilledTemplate={onDownloadFilledTemplate}
+          onSaveGrades={onSaveGrades}
         />
       )}
 

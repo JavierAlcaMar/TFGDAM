@@ -35,6 +35,8 @@ import com.sara.tfgdam.repository.ActivityRepository;
 import com.sara.tfgdam.repository.CourseModuleRepository;
 import com.sara.tfgdam.repository.GradeRepository;
 import com.sara.tfgdam.repository.ImportJobRepository;
+import com.sara.tfgdam.repository.InstrumentExerciseGradeRepository;
+import com.sara.tfgdam.repository.InstrumentExerciseWeightRepository;
 import com.sara.tfgdam.repository.InstrumentRARepository;
 import com.sara.tfgdam.repository.InstrumentRepository;
 import com.sara.tfgdam.repository.LearningOutcomeRARepository;
@@ -70,6 +72,8 @@ public class ModuleSetupService {
     private final StudentRepository studentRepository;
     private final StudentEvaluationOverrideRepository studentEvaluationOverrideRepository;
     private final GradeRepository gradeRepository;
+    private final InstrumentExerciseGradeRepository instrumentExerciseGradeRepository;
+    private final InstrumentExerciseWeightRepository instrumentExerciseWeightRepository;
     private final ImportJobRepository importJobRepository;
     private final ConfigurationValidator configurationValidator;
 
@@ -94,8 +98,29 @@ public class ModuleSetupService {
     }
 
     @Transactional
+    public CourseModule replaceModuleData(Long moduleId, CreateModuleRequest request) {
+        CourseModule module = getModule(moduleId);
+        clearModuleData(moduleId);
+
+        module.setName(request.getName().trim());
+        module.setAcademicYear(request.getAcademicYear());
+
+        if (request.getTeacherId() != null || (request.getTeacherName() != null && !request.getTeacherName().trim().isEmpty())) {
+            module.setTeacher(resolveTeacher(request.getTeacherId(), request.getTeacherName()));
+        }
+
+        return courseModuleRepository.save(module);
+    }
+
+    @Transactional
     public void deleteModule(Long moduleId) {
         CourseModule module = getModule(moduleId);
+        clearModuleData(moduleId);
+        courseModuleRepository.delete(module);
+    }
+
+    private void clearModuleData(Long moduleId) {
+        getModule(moduleId);
 
         List<Student> students = studentRepository.findByModuleId(moduleId);
         List<Long> studentIds = students.stream().map(Student::getId).toList();
@@ -116,6 +141,8 @@ public class ModuleSetupService {
                 .toList();
 
         if (!instrumentIds.isEmpty()) {
+            instrumentExerciseGradeRepository.deleteByInstrument_IdIn(instrumentIds);
+            instrumentExerciseWeightRepository.deleteByInstrumentIdIn(instrumentIds);
             gradeRepository.deleteByInstrumentIdIn(instrumentIds);
             instrumentRARepository.deleteByInstrumentIdIn(instrumentIds);
             instrumentRepository.deleteAllById(instrumentIds);
@@ -123,6 +150,7 @@ public class ModuleSetupService {
 
         if (!studentIds.isEmpty()) {
             studentEvaluationOverrideRepository.deleteByStudent_Module_Id(moduleId);
+            instrumentExerciseGradeRepository.deleteByStudent_IdIn(studentIds);
             gradeRepository.deleteByStudentIdIn(studentIds);
             studentRepository.deleteAllById(studentIds);
         }
@@ -149,7 +177,6 @@ public class ModuleSetupService {
         }
 
         importJobRepository.deleteByModuleId(moduleId);
-        courseModuleRepository.delete(module);
     }
 
     @Transactional
@@ -300,6 +327,8 @@ public class ModuleSetupService {
             List<Instrument> instruments = instrumentRepository.findByActivityId(activity.getId());
             if (!instruments.isEmpty()) {
                 List<Long> instrumentIds = instruments.stream().map(Instrument::getId).toList();
+                instrumentExerciseGradeRepository.deleteByInstrument_IdIn(instrumentIds);
+                instrumentExerciseWeightRepository.deleteByInstrumentIdIn(instrumentIds);
                 gradeRepository.deleteByInstrumentIdIn(instrumentIds);
                 instrumentRARepository.deleteByInstrumentIdIn(instrumentIds);
                 instrumentRepository.deleteAllById(instrumentIds);
@@ -412,6 +441,8 @@ public class ModuleSetupService {
     @Transactional
     public void deleteInstrument(Long instrumentId) {
         Instrument instrument = getInstrument(instrumentId);
+        instrumentExerciseGradeRepository.deleteByInstrument_Id(instrumentId);
+        instrumentExerciseWeightRepository.deleteByInstrumentId(instrumentId);
         gradeRepository.deleteByInstrumentId(instrumentId);
         instrumentRARepository.deleteByInstrumentId(instrumentId);
         instrumentRepository.delete(instrument);
